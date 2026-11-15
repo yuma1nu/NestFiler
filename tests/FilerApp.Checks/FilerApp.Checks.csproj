@@ -1,0 +1,4 @@
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net10.0-windows</TargetFramework><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable></PropertyGroup><ItemGroup><ProjectReference Include="../../src/FilerApp.Core/FilerApp.Core.csproj"/><Compile Include="../../src/FilerApp/Services/FileOperationService.cs" Link="FileOperationService.cs"/><Compile Include="../../src/FilerApp/Services/ShellInterop.cs" Link="ShellInterop.cs"/><Compile Include="../../src/FilerApp/Services/ShellFileIcon.cs" Link="ShellFileIcon.cs"/></ItemGroup></Project>
+
+
+

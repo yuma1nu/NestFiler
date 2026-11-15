@@ -1,0 +1,66 @@
+<UserControl x:Class="FilerApp.Views.PaneView" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:core="using:FilerApp.Core" xmlns:views="using:FilerApp.Views">
+ <UserControl.Resources>
+  <ItemsPanelTemplate x:Key="DetailsPanel"><ItemsStackPanel Orientation="Vertical" CacheLength="{StaticResource FileListCacheLength}"/></ItemsPanelTemplate>
+  <ItemsPanelTemplate x:Key="SmallIconsPanel"><ItemsWrapGrid Orientation="Horizontal" CacheLength="{StaticResource FileListCacheLength}" ItemWidth="{StaticResource SmallFileTileWidth}" ItemHeight="{StaticResource SmallFileTileHeight}"/></ItemsPanelTemplate>
+  <ItemsPanelTemplate x:Key="LargeIconsPanel"><ItemsWrapGrid Orientation="Horizontal" CacheLength="{StaticResource FileListCacheLength}" ItemWidth="{StaticResource LargeFileTileWidth}" ItemHeight="{StaticResource LargeFileTileHeight}"/></ItemsPanelTemplate>
+  <Style x:Key="DetailsItemStyle" TargetType="ListViewItem"><Setter Property="MinHeight" Value="{StaticResource FileRowHeight}"/><Setter Property="Height" Value="{StaticResource FileRowHeight}"/><Setter Property="Padding" Value="0"/><Setter Property="Margin" Value="0"/><Setter Property="Background" Value="Transparent"/><Setter Property="HorizontalAlignment" Value="Stretch"/><Setter Property="HorizontalContentAlignment" Value="Stretch"/><Setter Property="VerticalContentAlignment" Value="Stretch"/></Style>
+  <Style x:Key="IconItemStyle" TargetType="ListViewItem"><Setter Property="MinHeight" Value="0"/><Setter Property="Padding" Value="4"/><Setter Property="Margin" Value="2"/><Setter Property="HorizontalContentAlignment" Value="Stretch"/><Setter Property="VerticalContentAlignment" Value="Stretch"/></Style>
+  <DataTemplate x:Key="DetailsTemplate" x:DataType="core:FileEntry"><views:FileDetailsRow Entry="{Binding}"/></DataTemplate>
+  <DataTemplate x:Key="SmallIconsTemplate" x:DataType="core:FileEntry">
+   <Grid RowSpacing="4" ToolTipService.ToolTip="{x:Bind DisplayTooltip}"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+    <views:FileTypeIcon Entry="{Binding}" IconSize="{StaticResource SmallFileIconSize}" ShowThumbnail="True" HorizontalAlignment="Center"/>
+    <TextBlock Grid.Row="1" Text="{x:Bind Name}" TextAlignment="Center" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" MaxLines="2" FontSize="12"/>
+   </Grid>
+  </DataTemplate>
+  <DataTemplate x:Key="LargeIconsTemplate" x:DataType="core:FileEntry">
+   <Grid RowSpacing="4" ToolTipService.ToolTip="{x:Bind DisplayTooltip}"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+    <views:FileTypeIcon Entry="{Binding}" IconSize="{StaticResource LargeFileIconSize}" ShowThumbnail="True" HorizontalAlignment="Center"/>
+    <TextBlock Grid.Row="1" Text="{x:Bind Name}" TextAlignment="Center" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" MaxLines="2" FontSize="12"/>
+   </Grid>
+  </DataTemplate>
+ </UserControl.Resources>
+ <Border x:Name="Frame" BorderThickness="0" CornerRadius="4" Padding="5" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" GotFocus="ActivatePaneFocus">
+  <Grid RowSpacing="3"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+   <Border x:Name="ActivePaneSurface" Grid.RowSpan="7" Margin="-5" CornerRadius="4" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" IsHitTestVisible="False" Visibility="Collapsed"/>
+   <TabView x:Name="Tabs" TabWidthMode="SizeToContent" SelectionChanged="TabChanged" AddTabButtonClick="TabAdd" TabCloseRequested="TabClose">
+    <TabView.TabItemTemplate><DataTemplate x:DataType="core:TabViewModel"><TabViewItem Header="{x:Bind Title, Mode=OneWay}" Tag="{x:Bind}" IsClosable="True" /></DataTemplate></TabView.TabItemTemplate>
+   </TabView>
+   <Grid Grid.Row="1" ColumnSpacing="2"><Grid.ColumnDefinitions><ColumnDefinition Width="22"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+    <TextBlock x:Name="PaneLabel" Text="A" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+    <Button x:Name="BackButton" Grid.Column="1" Style="{StaticResource NavigationButton}" IsEnabled="{Binding CanBack}" Click="Back" AutomationProperties.Name="戻る" ToolTipService.ToolTip="戻る"><FontIcon Glyph="&#xE72B;" FontSize="14"/></Button>
+    <Button x:Name="ForwardButton" Grid.Column="2" Style="{StaticResource NavigationButton}" IsEnabled="{Binding CanForward}" Click="Forward" AutomationProperties.Name="進む" ToolTipService.ToolTip="進む"><FontIcon Glyph="&#xE72A;" FontSize="14"/></Button>
+    <Button x:Name="UpButton" Grid.Column="3" Style="{StaticResource NavigationButton}" Click="Up" AutomationProperties.Name="親フォルダ" ToolTipService.ToolTip="親フォルダ"><FontIcon Glyph="&#xE74A;" FontSize="14"/></Button>
+    <Button x:Name="NavigationRefresh" Grid.Column="4" Style="{StaticResource NavigationButton}" Click="Refresh" AutomationProperties.Name="再読み込み" ToolTipService.ToolTip="再読み込み (F5)"><FontIcon Glyph="&#xE72C;" FontSize="14"/></Button>
+    <StackPanel x:Name="ViewModeButtons" Grid.Column="5" Orientation="Horizontal" Spacing="1" Margin="4,0" AutomationProperties.Name="一覧の表示形式">
+     <ToggleButton x:Name="DetailsViewButton" Style="{StaticResource ViewModeButton}" IsChecked="True" Tag="Details" Checked="ViewModeChecked" Unchecked="ViewModeUnchecked" AutomationProperties.Name="詳細一覧" ToolTipService.ToolTip="詳細一覧"><FontIcon Glyph="&#xE9D5;" FontSize="14"/></ToggleButton>
+     <ToggleButton x:Name="SmallIconsViewButton" Style="{StaticResource ViewModeButton}" Tag="SmallIcons" Checked="ViewModeChecked" Unchecked="ViewModeUnchecked" AutomationProperties.Name="小サムネイル" ToolTipService.ToolTip="小サムネイル"><Path Width="14" Height="14" Stretch="Uniform" Fill="{Binding Foreground, ElementName=SmallIconsViewButton}" Data="M0,0h3v3h-3z M5,0h3v3h-3z M10,0h3v3h-3z M0,5h3v3h-3z M5,5h3v3h-3z M10,5h3v3h-3z M0,10h3v3h-3z M5,10h3v3h-3z M10,10h3v3h-3z"/></ToggleButton>
+     <ToggleButton x:Name="LargeIconsViewButton" Style="{StaticResource ViewModeButton}" Tag="LargeIcons" Checked="ViewModeChecked" Unchecked="ViewModeUnchecked" AutomationProperties.Name="大サムネイル" ToolTipService.ToolTip="大サムネイル"><Path Width="14" Height="14" Stretch="Uniform" Fill="{Binding Foreground, ElementName=LargeIconsViewButton}" Data="M0,0h6v6h-6z M8,0h6v6h-6z M0,8h6v6h-6z M8,8h6v6h-6z"/></ToggleButton>
+    </StackPanel>
+    <ComboBox x:Name="SearchModeChoice" Grid.Column="6" Visibility="Collapsed" MinWidth="0" Width="96" Height="28" MinHeight="28" Padding="5,0" FontSize="12" SelectedIndex="0" SelectionChanged="SearchModeChanged" AutomationProperties.Name="検索の種類"><x:String>名前</x:String><x:String>内容</x:String><x:String>名前＋内容</x:String></ComboBox>
+    <TextBox x:Name="PaneSearch" Grid.Column="7" MinWidth="0" MaxLength="500" MinHeight="28" Height="28" Padding="6,2" FontSize="12" PlaceholderText="このフォルダ以下を検索" KeyDown="PaneSearchKey" AutomationProperties.Name="ペイン内検索"/>
+    <Button Grid.Column="8" Style="{StaticResource NavigationButton}" Click="SubmitPaneSearch" AutomationProperties.Name="検索" ToolTipService.ToolTip="検索（同じペインの検索タブに表示）"><FontIcon Glyph="&#xE721;" FontSize="14"/></Button>
+    <Button x:Name="StopSearchButton" Grid.Column="9" Visibility="Collapsed" Style="{StaticResource NavigationButton}" Click="StopPaneSearch" AutomationProperties.Name="検索を中断" ToolTipService.ToolTip="検索を中断"><FontIcon Glyph="&#xE711;" FontSize="12"/></Button>
+    <Button x:Name="SearchOptionsButton" Grid.Column="10" Visibility="Collapsed" Style="{StaticResource NavigationButton}" Click="ShowSearchOptions" AutomationProperties.Name="検索条件" ToolTipService.ToolTip="検索条件（右クリックからも変更できます）"><FontIcon Glyph="&#xE712;" FontSize="14"/></Button>
+   </Grid>
+   <Grid Grid.Row="2" MinHeight="28">
+    <Grid x:Name="PathBar" Background="Transparent" PointerPressed="PathBarPressed"><Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*" MinWidth="24"/></Grid.ColumnDefinitions><ScrollViewer x:Name="BreadcrumbScroller" HorizontalScrollBarVisibility="Hidden" HorizontalScrollMode="Enabled" VerticalScrollBarVisibility="Disabled"><StackPanel x:Name="BreadcrumbItems" Orientation="Horizontal" Spacing="0"/></ScrollViewer></Grid>
+    <TextBox x:Name="Address" Visibility="Collapsed" MinHeight="28" Height="28" Padding="6,2" FontSize="13" KeyDown="AddressKey" LostFocus="AddressLostFocus" AutomationProperties.Name="フォルダパス"/>
+   </Grid>
+   <Grid x:Name="FilterBar" Grid.Row="3" Visibility="Collapsed"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><TextBox x:Name="ListFilter" Height="28" MinHeight="28" Padding="6,2" FontSize="12" PlaceholderText="現在の一覧を絞り込み（*.csv など）" AutomationProperties.Name="一覧の絞り込み" TextChanged="FilterChanged" KeyDown="FilterKey"/><Button Grid.Column="1" Style="{StaticResource NavigationButton}" Click="ClearFilter" AutomationProperties.Name="絞り込みを解除"><FontIcon Glyph="&#xE711;" FontSize="12"/></Button></Grid>
+   <Grid x:Name="ColumnHeaders" Grid.Row="4" Height="24" Margin="6,0,0,0" HorizontalAlignment="Left"><Grid x:Name="ColumnHeaderGrid" Height="24" HorizontalAlignment="Left"><Grid.RenderTransform><TranslateTransform x:Name="HeaderTranslation"/></Grid.RenderTransform></Grid></Grid>
+   <Grid x:Name="FileArea" Grid.Row="5" Background="Transparent">
+    <Grid.ColumnDefinitions><ColumnDefinition Width="6"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+    <Border x:Name="SelectionGutter" Background="Transparent" PointerPressed="SelectionGutterPressed" ToolTipService.ToolTip="ここからドラッグして範囲選択"/>
+    <views:FileListView x:Name="Files" Grid.Column="1" Background="Transparent" ItemsSource="{Binding Entries}" ItemTemplate="{StaticResource DetailsTemplate}" ItemsPanel="{StaticResource DetailsPanel}" ItemContainerStyle="{StaticResource DetailsItemStyle}" SelectionMode="Extended" SelectionChanged="FileSelection" DoubleTapped="OpenSelected" KeyDown="FileKey" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Auto"/>
+    <Canvas x:Name="MarqueeOverlay" Grid.Column="1" IsHitTestVisible="False" Visibility="Collapsed"><Grid x:Name="MarqueeBox"><Rectangle Fill="{ThemeResource AccentFillColorDefaultBrush}" Opacity="0.12"/><Rectangle Stroke="{ThemeResource AccentFillColorDefaultBrush}" StrokeThickness="1"/></Grid></Canvas>
+   </Grid>
+   <StackPanel Grid.Row="6" Orientation="Horizontal" Spacing="10"><ProgressRing IsActive="{Binding Busy}" Width="16" Height="16" HorizontalAlignment="Left"/><TextBlock Text="{Binding Status}" TextWrapping="Wrap" FontSize="12"/><TextBlock x:Name="SelectionStatus" FontSize="12"/></StackPanel>
+  </Grid>
+ </Border>
+</UserControl>
+
+
+
+
+
+

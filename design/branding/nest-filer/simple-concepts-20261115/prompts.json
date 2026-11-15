@@ -1,0 +1,32 @@
+{
+  "tool": "image_gen.imagegen",
+  "drafts": [
+    {
+      "id": "1",
+      "name": "simple-n",
+      "source": "D:/OneDrive/02_Area/Programming/FilerApp/design/branding/nest-filer/concepts-20261115/C-n-monogram.png",
+      "prompt": "Redesign the supplied app icon as an EXTREMELY SIMPLE FLAT 2D vector-style pictogram for Nest Filer. Discard ALL rendering style from the source. The source is only a concept reference. Exactly two UNIFORM SOLID fill colors: deep teal #217D78 and amber #F2B544. Sharp clean contours with restrained small corner radii. ABSOLUTELY NO gradients, no shading, no highlights, no gloss, no glow, no bloom, no shadow, no lighting, no texture, no 3D, no perspective, no overlapping translucent effects. Clear at 16px and 32px. Use only 2 to 4 geometric shapes. Center one compact icon, large enough to read, with generous transparent outer padding. A square composition. Transparent background, remove all black backdrop and all luminous haze from the source. No text, no label, no wordmark, no decorative container. Concept 1: a bold upright capital N, made as one solid teal geometric shape. On the top of its right vertical stem put ONE small flat amber folder-tab shape. It must read unmistakably as the letter N and only hint at a folder. No extra panels, no fold details, no stacked sheets. Minimal modern utility-app symbol."
+    },
+    {
+      "id": "2",
+      "name": "simple-nested-folders",
+      "source": "D:/OneDrive/02_Area/Programming/FilerApp/design/branding/nest-filer/concepts-20261115/A-nested-folders.png",
+      "prompt": "Redesign the supplied app icon as an EXTREMELY SIMPLE FLAT 2D vector-style pictogram for Nest Filer. Discard ALL rendering style from the source. The source is only a concept reference. Exactly two UNIFORM SOLID fill colors: deep teal #217D78 and amber #F2B544. Sharp clean contours with restrained small corner radii. ABSOLUTELY NO gradients, no shading, no highlights, no gloss, no glow, no bloom, no shadow, no lighting, no texture, no 3D, no perspective, no overlapping translucent effects. Clear at 16px and 32px. Use only 2 to 4 geometric shapes. Center one compact icon, large enough to read, with generous transparent outer padding. A square composition. Transparent background, remove all black backdrop and all luminous haze from the source. No text, no label, no wordmark, no decorative container. Concept 2: a single thick teal outline of a folder, with a single smaller solid amber folder silhouette nested inside it. Only two folder shapes, no pocket flap, no third folder, no inner ornament, no letters. Big comfortable transparent gap between the inner folder and the outer outline. Simple and sturdy like a well-designed toolbar pictogram."
+    },
+    {
+      "id": "3",
+      "name": "simple-two-panes",
+      "source": "D:/OneDrive/02_Area/Programming/FilerApp/design/branding/nest-filer/concepts-20261115/D-two-panes.png",
+      "prompt": "Redesign the supplied app icon as an EXTREMELY SIMPLE FLAT 2D vector-style pictogram for Nest Filer. Discard ALL rendering style from the source. The source is only a concept reference. Exactly two UNIFORM SOLID fill colors: deep teal #217D78 and amber #F2B544. Sharp clean contours with restrained small corner radii. ABSOLUTELY NO gradients, no shading, no highlights, no gloss, no glow, no bloom, no shadow, no lighting, no texture, no 3D, no perspective, no overlapping translucent effects. Clear at 16px and 32px. Use only 2 to 4 geometric shapes. Center one compact icon, large enough to read, with generous transparent outer padding. A square composition. Transparent background, remove all black backdrop and all luminous haze from the source. No text, no label, no wordmark, no decorative container. Concept 3: ONE simple flat folder silhouette, divided into a teal left half and an amber right half by a single narrow transparent vertical gap. The top-left has one conventional small folder tab. No front pocket, no inset panels, no sheets sticking out, no border, no tiny file-list marks, no letters. The silhouette and centered split alone communicate two file panes."
+    }
+  ],
+  "final_comparison": {
+    "prompt": "Create ONE clean professional design comparison sheet for three extremely simple app-icon proposals for Nest Filer. Use the three input images ONLY as conceptual references; redraw everything from scratch. The third input has an accidental hole and mottling: eliminate those artifacts completely. PURE WHITE opaque background. Wide landscape layout, three equal columns in a single row. Under the symbols put only the small centered labels A, B, C in plain dark gray sans-serif. No other text. The icons themselves must look like mathematically clean SVG pictograms: perfectly uniform SOLID color areas with no texture, no noise, no shading, no gradients, no shine, no depth, no glow, no shadow, no halos, no interior dark patches, no transparency within colored areas. Color palette ONLY solid deep teal #217D78 and solid amber #F2B544; white negative space. Restrained small corner radii, bold simple forms, clear at 16px. A: a single bold upright capital N in teal, with one small amber folder tab at top of its right stem. B: one thick teal outlined folder, with one smaller solid amber folder nested inside, ample clear white gap. C: one folder silhouette with a small top-left tab, teal left half and amber right half, separated by a thin clean straight white vertical gap. All three marks have equal optical size and aligned centers, and generous padding. Do not add any patterns, panels, decorative borders, boxes, containers, or other symbols. Flat geometry only, suitable as the design master for a vector icon.",
+    "transparent_background": false,
+    "referenced_image_paths": [
+      "C:/Users/Yuma/.codex/generated_images/01a1d4f5-1751-7db2-aeb7-3ef7990ab779/exec-b6c6194b-dc2e-4b8c-b0b1-9a64d842670e.png",
+      "C:/Users/Yuma/.codex/generated_images/01a1d4f5-1751-7db2-aeb7-3ef7990ab779/exec-ee5adfe1-a7cd-4258-8c56-81518b1239b0.png",
+      "C:/Users/Yuma/.codex/generated_images/01a1d4f5-1751-7db2-aeb7-3ef7990ab779/exec-5cfdb441-c9f7-40f1-82ab-a0d182c0a8ea.png"
+    ]
+  }
+}
