@@ -1,11 +1,11 @@
 # Nest Filer ポータブル版
 
-v0.1.0 / Windows x64向けの未署名試用版。Windows 11を主対象とします。
+v0.1.1 / Windows x64向けの未署名試用版。Windows 11を主対象とします。
 
-配布先: https://github.com/yuma1nu/NestFiler/releases/tag/v0.1.0
+配布先: https://github.com/yuma1nu/NestFiler/releases/tag/v0.1.1
 
-`NestFiler-win-x64-v0.1.0.zip` と照合用の `.zip.sha256` を公開します。
-PowerShell の `Get-FileHash .\NestFiler-win-x64-v0.1.0.zip -Algorithm SHA256` で照合できます。
+`NestFiler-win-x64-v0.1.1.zip` と照合用の `.zip.sha256` を公開します。
+PowerShell の `Get-FileHash .\NestFiler-win-x64-v0.1.1.zip -Algorithm SHA256` で照合できます。
 
 1. ZIPをローカルの書き込み可能なフォルダに展開。
 2. フォルダ内のNestFiler.exeを起動。exeだけを取り出さず、同梱ファイルを維持してください。

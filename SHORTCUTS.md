@@ -17,6 +17,7 @@
 | キー | 操作 |
 |---|---|
 | Ctrl+C / Ctrl+X / Ctrl+V | 選択ファイルのコピー／切り取り／貼り付け |
+| Shift+Insert | 貼り付け。Ctrl+Vと同じ。SharePointのOffice共有リンクはショートカットを作成 |
 | Ctrl+A | ファイル一覧を全選択 |
 | Ctrl+Shift+C | 選択項目のフルパスをコピー。未選択なら現在のフォルダ |
 | Ctrl+Shift+N | 新規フォルダ |

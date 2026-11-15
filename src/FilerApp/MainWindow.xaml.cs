@@ -68,6 +68,7 @@ public sealed partial class MainWindow : Window
         if (!stateWritable) Status.Text = "設定を読み込めなかったため、保存を停止しています。元のstate.dbを保持しています。";
         else if (store.RecoveredBackup) Status.Text = "設定の読み込みに失敗したため、直前の保存内容から復旧しました。";
 #if DEBUG
+        if (Environment.GetEnvironmentVariable("FILERAPP_SHAREPOINT_CHECK") == "1" && Environment.GetEnvironmentVariable("FILERAPP_PROFILE_DIR") != null) { await RunSharePointChecksAsync(); return; }
         if (Environment.GetEnvironmentVariable("FILERAPP_OUTPUT_LIVE_PROBE") == "1" && Environment.GetEnvironmentVariable("FILERAPP_PROFILE_DIR") != null) StartOutputLiveProbe();
         if (Environment.GetEnvironmentVariable("FILERAPP_OUTPUT_CHECK") == "1" && Environment.GetEnvironmentVariable("FILERAPP_PROFILE_DIR") != null) { await RunOutputChecksAsync(); return; }
         if (Environment.GetEnvironmentVariable("FILERAPP_RESPONSIVENESS_CHECK") == "1" && Environment.GetEnvironmentVariable("FILERAPP_PROFILE_DIR") != null) { await RunResponsivenessChecksAsync(); return; }

@@ -42,7 +42,7 @@ public sealed class FileTypeIcon : Grid
         {
             PaneView? pane = null;
             for (var node = VisualTreeHelper.GetParent(this); node != null; node = VisualTreeHelper.GetParent(node)) if (node is PaneView owner) { pane = owner; break; }
-            var extension = System.IO.Path.GetExtension(entry.Path); int size = IconSize > 32 ? 48 : 32;
+            var extension = entry.IconExtension; int size = IconSize > 32 ? 48 : 32;
             var icon = FileIconService.TryGet(entry.IsDirectory, extension, size);
             if (icon == null)
             {

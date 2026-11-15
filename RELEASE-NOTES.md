@@ -1,10 +1,17 @@
-# Nest Filer v0.1.0 — 試用版
+# Nest Filer v0.1.1 — 試用版
 
-初回の公開試用版です。Windows x64 用のポータブル版を配布します。
+SharePoint 共有リンクの貼り付けに対応した更新試用版です。Windows x64 用のポータブル版を配布します。
+
+## v0.1.0 からの変更
+
+- SharePoint の Office 文書リンクを Ctrl+V／Shift+Insert／右クリックの「貼り付け」で `.url` ショートカットとして作成できます。
+- Word・Excel・PowerPoint のデスクトップアプリ用リンクと、種類に応じたアイコン・種類表示に対応しました。
+- 同名ショートカットは連番で保存し、既存ファイルを上書きしません。通常のファイル貼り付けを優先し、アドレス欄などの編集中は文字列貼り付けを維持します。
+- 詳細は [SharePoint 共有リンクの操作と制約](https://github.com/yuma1nu/NestFiler/blob/v0.1.1/SHAREPOINT-SHORTCUTS.md) を参照してください。
 
 ## 利用方法
 
-Assets の `NestFiler-win-x64-v0.1.0.zip` を展開し、`NestFiler.exe` を起動してください。exe だけを取り出さず、同梱ファイルを維持してください。.NET と Windows App SDK を同梱しています。
+Assets の `NestFiler-win-x64-v0.1.1.zip` を展開し、`NestFiler.exe` を起動してください。exe だけを取り出さず、同梱ファイルを維持してください。.NET と Windows App SDK を同梱しています。
 
 設定と履歴は `%LOCALAPPDATA%\FilerApp\state.db` に保存します。更新時はアプリを閉じ、新版を別フォルダに展開してください。ZIP の照合用に SHA256 ファイルも添付します。
 
@@ -21,6 +28,7 @@ Assets の `NestFiler-win-x64-v0.1.0.zip` を展開し、`NestFiler.exe` を起�
 - **未署名の試用版です。** インストーラーと自動更新はありません。Windows の警告が表示される場合があります。
 - ファイル操作は実データを変更します。重要なデータはバックアップし、まず検証用フォルダでお試しください。
 - 主対象は Windows 11 x64。クリーン PC での起動は未検証です。
+- SharePoint リンクを開くには対応する Office デスクトップアプリ・サインイン・共有権限が必要です。実際の認証済み文書の起動は未検証です。Office 以外のファイルとオンプレミス SharePoint には対応していません。
 - 共有フォルダの異常系、実際の DPI／モニター変更、長時間利用、大量ファイルの検証は未完了です。
 - タブの表示位置復元で断続的なずれが過去の自動確認で検出されています。
 

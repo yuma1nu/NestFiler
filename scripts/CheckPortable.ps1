@@ -1,6 +1,8 @@
 param([Parameter(Mandatory)][string]$ZipPath)
 $ErrorActionPreference = 'Stop'
 $root = Split-Path $PSScriptRoot -Parent
+[xml]$project = Get-Content -LiteralPath (Join-Path $root 'src/FilerApp/FilerApp.csproj')
+$expectedVersion = [string]$project.Project.PropertyGroup.FileVersion
 $checkRoot = Join-Path $root ('artifacts/portable-check-' + [guid]::NewGuid().ToString('N'))
 $application = Join-Path $checkRoot 'app'
 $profile = Join-Path $checkRoot 'profile'
@@ -10,7 +12,7 @@ foreach ($file in @('NestFiler.exe', 'NestFiler.dll', 'NestFiler.pri', 'App.xbf'
     if (!(Test-Path -LiteralPath (Join-Path $application $file))) { throw "Missing portable file: $file" }
 }
 $version = (Get-Item -LiteralPath (Join-Path $application 'NestFiler.exe')).VersionInfo
-if ($version.FileVersion -ne '0.1.0.0' -or $version.ProductName -ne 'Nest Filer') { throw 'Unexpected executable version or product name' }
+if ($version.FileVersion -ne $expectedVersion -or $version.ProductName -ne 'Nest Filer') { throw 'Unexpected executable version or product name' }
 $start = [Diagnostics.ProcessStartInfo]::new()
 $start.FileName = Join-Path $application 'NestFiler.exe'
 $start.UseShellExecute = $false

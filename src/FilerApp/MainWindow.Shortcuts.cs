@@ -7,6 +7,14 @@ namespace FilerApp;
 public sealed partial class MainWindow
 {
     private static bool KeyDown(VirtualKey key) => Microsoft.UI.Input.InputKeyboardSource.GetKeyStateForCurrentThread(key).HasFlag(Windows.UI.Core.CoreVirtualKeyStates.Down);
+    private string? ListingCommand(VirtualKey key, bool control, bool shift)
+    {
+        if (!CanPasteIntoListing() || !active.ContainsFocus()) return null;
+        if (!control && shift && key == VirtualKey.Insert) return "paste";
+        return control && shift ? key switch { VirtualKey.N => "mkdir", VirtualKey.C => "copyPath", _ => null } :
+            control ? key switch { VirtualKey.C => "copy", VirtualKey.X => "cut", VirtualKey.V => "paste", VirtualKey.A => "selectAll", _ => null } :
+            key switch { VirtualKey.F2 => "rename", VirtualKey.Delete => "recycle", _ => null };
+    }
     private async void RootKey(object sender, KeyRoutedEventArgs e)
     {
         if (e.Handled) return;
@@ -15,13 +23,7 @@ public sealed partial class MainWindow
         for (var node = focused; node != null; node = VisualTreeHelper.GetParent(node)) if (node is ContentDialog) return;
         bool control = KeyDown(VirtualKey.Control), shift = KeyDown(VirtualKey.Shift), alt = KeyDown(VirtualKey.Menu), editing = IsEditing(focused);
         bool inPane = active.ContainsFocus();
-        string? command = null;
-        if (!editing && inPane)
-        {
-            command = control && shift ? e.Key switch { VirtualKey.N => "mkdir", VirtualKey.C => "copyPath", _ => null } :
-                control ? e.Key switch { VirtualKey.C => "copy", VirtualKey.X => "cut", VirtualKey.V => "paste", VirtualKey.A => "selectAll", _ => null } :
-                e.Key switch { VirtualKey.F2 => "rename", VirtualKey.Delete => "recycle", _ => null };
-        }
+        var command = ListingCommand(e.Key, control, shift);
         if (command != null) { e.Handled = true; if (!e.KeyStatus.WasKeyDown) { if (command == "selectAll") active.SelectAllFiles(); else await CommandAsync(command); } return; }
         if (control && shift && e.Key == VirtualKey.T) { e.Handled = true; if (!e.KeyStatus.WasKeyDown) await active.RestoreClosedTabAsync(); }
         else if (control && e.Key is VirtualKey.W or VirtualKey.F4) { e.Handled = true; if (!e.KeyStatus.WasKeyDown) active.CloseCurrent(); }

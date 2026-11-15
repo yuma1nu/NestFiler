@@ -37,8 +37,7 @@ public sealed partial class MainWindow
             }
             else if (command == "paste")
             {
-                var data = Clipboard.GetContent(); if (!data.Contains(StandardDataFormats.StorageItems)) return;
-                await PasteFilesAsync(data, folder);
+                await PasteIntoPaneAsync(pane, folder, Clipboard.GetContent());
             }
             else if (command is "copyOther" or "moveOther")
             {

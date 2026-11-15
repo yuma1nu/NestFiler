@@ -144,6 +144,7 @@ try
     await SearchTabChecks.RunAsync(root, Check);
     await ColumnChecks.RunAsync(root, Check);
     await FoundationChecks.RunAsync(root, Check);
+    await SharePointChecks.RunAsync(root, Check);
     Console.WriteLine($"{passed} checks passed; fixture: {root}");
 }
 finally

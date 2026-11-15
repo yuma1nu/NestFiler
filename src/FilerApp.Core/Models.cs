@@ -20,7 +20,8 @@ public sealed record FileEntry(string Path, string Name, bool IsDirectory, long 
     public string SearchLineLabel => SearchLine > 0 ? SearchLine.ToString() : "";
     public string DisplayTooltip => SearchDetail.Length > 0 ? Path + "\n" + SearchDetail : Path;
     public string Icon => IsDirectory ? "\uE8B7" : "\uE8A5";
-    public string Kind => IsDirectory ? "フォルダ" : System.IO.Path.GetExtension(Path).ToUpperInvariant();
+    public string IconExtension => OfficeDocuments.IconExtension(Path);
+    public string Kind => IsDirectory ? "フォルダ" : System.IO.Path.GetExtension(Path).Equals(".url", StringComparison.OrdinalIgnoreCase) && OfficeDocuments.ApplicationForExtension(IconExtension) is { } app ? app + " リンク" : System.IO.Path.GetExtension(Path).ToUpperInvariant();
     public string SizeLabel => IsDirectory ? "" : Size < 1024 ? $"{Size:N0} B" : Size < 1048576 ? $"{Size / 1024d:N1} KB" : $"{Size / 1048576d:N1} MB";
     public string ModifiedLabel => Modified.ToString("yyyy/MM/dd HH:mm");
 }
