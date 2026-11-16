@@ -14,5 +14,5 @@ $report = Join-Path $profile 'sharepoint-check.txt'
 if (!(Test-Path -LiteralPath $report)) { throw "No SharePoint report: $profile" }
 $lines = @(Get-Content -LiteralPath $report)
 $lines | Write-Output
-if (($lines | Where-Object { $_ -like 'FAIL*' }) -or ($lines | Where-Object { $_ -like 'PASS*' }).Count -ne 16) { throw "SharePoint paste checks failed: $report" }
+if (($lines | Where-Object { $_ -like 'FAIL*' }) -or ($lines | Where-Object { $_ -like 'PASS*' }).Count -ne 31) { throw "SharePoint, favorites and selection checks failed: $report" }
 Write-Output "Report: $report"

@@ -17,7 +17,7 @@ public sealed partial class MainWindow
     private async Task PasteIntoPaneAsync(PaneView pane, string folder, DataPackageView data)
     {
         if (!CanPasteIntoListing() || operating || pane.Current?.IsSearch == true) return;
-        if (data.Contains(StandardDataFormats.StorageItems)) { await PasteFilesAsync(data, folder); return; }
+        if (FileTransferData.ContainsFiles(data)) { await PasteFilesAsync(data, folder); return; }
         string? text = data.Contains(StandardDataFormats.WebLink) ? (await data.GetWebLinkAsync()).AbsoluteUri :
             data.Contains(StandardDataFormats.Text) ? await data.GetTextAsync() : null;
         if (text == null) { Status.Text = "コピーしたファイル、またはSharePointの共有リンクを貼り付けできます。"; return; }

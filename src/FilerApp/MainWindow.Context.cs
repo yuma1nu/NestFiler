@@ -29,7 +29,7 @@ public sealed partial class MainWindow
         {
             Add("パスをコピー", "copyPath", "Ctrl+Shift+C"); menu.Items.Add(new MenuFlyoutSeparator());
             Add("反対ペインへコピー", "copyOther"); Add("反対ペインへ移動", "moveOther");
-            Add("名前を変更", "rename", "F2", count == 1); Add("ごみ箱へ移動", "recycle", "Delete");
+            Add("名前を変更", "rename", "F2", count == 1); Add("削除…", "recycle", "Delete");
             if (pane.Current?.IsSearch == true) Add("格納フォルダを新しいタブで開く", "locate", "", count == 1);
         }
         else { Add("パスをコピー", "copyPath", "Ctrl+Shift+C"); Add("新規フォルダ", "mkdir", "Ctrl+Shift+N", pane.Current?.IsSearch != true); Add("更新", "refresh", "F5"); }

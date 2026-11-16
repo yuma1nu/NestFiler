@@ -9,6 +9,8 @@ var passed = 0;
 void Check(bool success, string name) { if (!success) throw new Exception("FAIL: " + name); Console.WriteLine("PASS: " + name); passed++; }
 try
 {
+    if (Environment.GetEnvironmentVariable("FILERAPP_SHORTCUT_OPERATION_CHECK") == "1") { await SharePointChecks.CheckOperationsAsync(root, Check); return; }
+    if (Environment.GetEnvironmentVariable("FILERAPP_DELETION_SERVICE_CHECK") == "1") { await DeletionChecks.RunAsync(root, Check); return; }
     var a = Directory.CreateDirectory(Path.Combine(root, "A")).FullName;
     var b = Directory.CreateDirectory(Path.Combine(root, "B")).FullName;
     await File.WriteAllTextAsync(Path.Combine(a, "日本語.csv"), "値,単位\n1,mm");
@@ -145,6 +147,7 @@ try
     await ColumnChecks.RunAsync(root, Check);
     await FoundationChecks.RunAsync(root, Check);
     await SharePointChecks.RunAsync(root, Check);
+    await DeletionChecks.RunAsync(root, Check);
     Console.WriteLine($"{passed} checks passed; fixture: {root}");
 }
 finally

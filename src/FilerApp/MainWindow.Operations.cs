@@ -22,7 +22,7 @@ public sealed partial class MainWindow
         {
             if (command == "cancel") { operationCancellation?.Cancel(); return; }
             if (command == "results") { await new ContentDialog { XamlRoot = Root.XamlRoot, Title = "ファイル操作結果", Content = new ScrollViewer { MaxHeight = 450, Content = new TextBlock { Text = string.Join("\n\n", operationResults.Select(x => x.Path + "\n" + x.Result)), TextWrapping = TextWrapping.Wrap, IsTextSelectionEnabled = true } }, CloseButtonText = "閉じる" }.ShowAsync(); return; }
-            if (operating) { Status.Text = "ファイル操作中です。"; return; }
+            if (operating || deletePromptOpen) { Status.Text = "ファイル操作中、または削除の確認中です。"; return; }
             var pane = active; var paths = pane.SelectedPaths; var folder = pane.Current?.Path;
             if (folder == null) return;
             if (command == "locate") { await pane.OpenContainingFolderAsync(); return; }
@@ -47,8 +47,7 @@ public sealed partial class MainWindow
             }
             else if (command == "recycle" && paths.Length > 0)
             {
-                var confirm = new ContentDialog { XamlRoot = Root.XamlRoot, Title = $"{paths.Length}項目をごみ箱へ移動", Content = "ごみ箱を利用できない場合は削除を中止します。", PrimaryButtonText = "続ける", CloseButtonText = "キャンセル" };
-                if (await confirm.ShowAsync() == ContentDialogResult.Primary) await RunOperationAsync(FileAction.Recycle, paths, null);
+                await DeleteSelectedAsync(paths);
             }
             else if (command == "rename" && paths.Length == 1 && await AskAsync("新しい名前", Path.GetFileName(paths[0])) is { } name)
             { FileOperationService.ValidateName(name); await RunOperationAsync(FileAction.Rename, paths, Path.Combine(Path.GetDirectoryName(paths[0])!, name)); }
@@ -57,15 +56,17 @@ public sealed partial class MainWindow
         }
         catch (Exception ex) { ShowError(ex.Message); }
     }
-    private async Task<List<OperationResult>> RunOperationAsync(FileAction action, string[] paths, string? destination)
+    private async Task<List<OperationResult>> RunOperationAsync(FileAction action, string[] paths, string? destination, DeletionPlan? deletionPlan = null)
     {
         if (operating || paths.Length == 0 || (destination == null && action != FileAction.Recycle)) return [];
         operating = true; operationCancellation = new(); Status.Text = "ファイル操作中 — 衝突の選択・進捗・キャンセルはWindows Shell画面で操作してください。";
         try
         {
-            operationResults = await new FileOperationService().ExecuteAsync(action, paths, destination, WinRT.Interop.WindowNative.GetWindowHandle(this), operationCancellation.Token, new Progress<string>(message => Status.Text = message));
+            var service = new FileOperationService(); var owner = WinRT.Interop.WindowNative.GetWindowHandle(this); var progress = new Progress<string>(message => Status.Text = message);
+            operationResults = deletionPlan == null ? await service.ExecuteAsync(action, paths, destination, owner, operationCancellation.Token, progress) :
+                await service.ExecuteDeletionAsync(deletionPlan, true, owner, operationCancellation.Token, progress);
             await Task.WhenAll(LeftPane.RefreshAfterOperationAsync(), RightPane.RefreshAfterOperationAsync());
-            Status.Text = $"操作終了: 成功 {operationResults.Count(x => x.Result == "成功")} 件 / その他 {operationResults.Count(x => x.Result != "成功")} 件。右クリック → ファイル操作の結果で明細を確認できます。";
+            Status.Text = $"操作終了: 成功 {operationResults.Count(x => x.Succeeded)} 件 / その他 {operationResults.Count(x => !x.Succeeded)} 件。右クリック → ファイル操作の結果で明細を確認できます。";
             return operationResults;
         }
         catch (Exception ex) { ShowError(ex.Message); return paths.Select(path => new OperationResult(path, "失敗: " + ex.Message)).ToList(); }

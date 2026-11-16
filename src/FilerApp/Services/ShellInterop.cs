@@ -65,7 +65,7 @@ internal static class ShellInterop
 }
 
 [ComVisible(true), ClassInterface(ClassInterfaceType.None)]
-public sealed class OperationSink(List<OperationResult> results, CancellationToken token, IProgress<string>? progress) : IProgressSink
+public sealed class OperationSink(List<OperationResult> results, CancellationToken token, IProgress<string>? progress, bool allowPermanentDelete = false) : IProgressSink
 {
     private int Check => token.IsCancellationRequested ? unchecked((int)0x800704C7) : 0;
     public static string Describe(int hr) => hr switch
@@ -95,13 +95,14 @@ public sealed class OperationSink(List<OperationResult> results, CancellationTok
     public int PreDeleteItem(uint f, nint i)
     {
         if (Check != 0) return Check;
-        if ((f & 0x80) != 0) return 0;
+        if (allowPermanentDelete || (f & 0x80) != 0) return 0;
         results.Add(new(ShellInterop.Name(i), "拒否: ごみ箱を使用できないため削除を中止"));
         return unchecked((int)0x800704C7);
     }
     public int PostDeleteItem(uint f, nint i, int r, nint c)
     {
         if (r == 0x0027000B) return 0;
+        if (allowPermanentDelete && r is 0 or 0x00270008) { results.Add(new(ShellInterop.Name(i), "成功（完全削除）")); return 0; }
         if (r >= 0 && r != 0x00270005 && c == 0) { results.Add(new(ShellInterop.Name(i), "完了未確定: ごみ箱への移動先をShellから確認できません")); return 0; }
         return Record(i, r, c);
     }

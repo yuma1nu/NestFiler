@@ -1,5 +1,4 @@
 using Windows.ApplicationModel.DataTransfer;
-using Windows.Storage;
 using FilerApp.Services;
 
 namespace FilerApp;
@@ -31,33 +30,33 @@ public sealed partial class MainWindow
     private void ClearCutAppearance() { clipboardToken = null; cutPaths = []; LeftPane.SetCutPaths([]); RightPane.SetCutPaths([]); }
     private async Task SetFileClipboardAsync(string[] paths, bool move)
     {
-        var items = new List<IStorageItem>();
-        foreach (var path in paths) items.Add(await Task.Run(async () => (IStorageItem)(Directory.Exists(path) ? await StorageFolder.GetFolderFromPathAsync(path) : await StorageFile.GetFileFromPathAsync(path))));
-        PublishFileClipboard(items, move);
+        var snapshot = paths.ToArray();
+        await Task.Run(() => { foreach (var path in snapshot) if (!File.Exists(path) && !Directory.Exists(path)) throw new IOException("コピー元が存在しないか、アクセスできません: " + path); });
+        PublishFileClipboard(snapshot, move);
     }
-    private void PublishFileClipboard(IReadOnlyList<IStorageItem> items, bool move)
+    private void PublishFileClipboard(string[] paths, bool move)
     {
         var token = Guid.NewGuid().ToString("N");
-        var package = new DataPackage { RequestedOperation = move ? DataPackageOperation.Move : DataPackageOperation.Copy };
-        package.SetStorageItems(items); package.SetData(ClipboardMarker, token);
-        package.OperationCompleted += (_, args) => DispatcherQueue.TryEnqueue(async () =>
+        var package = new DataPackage();
+        void Completed(DataPackageOperation operation) => DispatcherQueue.TryEnqueue(async () =>
         {
             // Storage-item targets perform the physical transfer. Never delete the source a second time.
-            if (args.Operation == DataPackageOperation.Move && clipboardToken == token)
+            if (move && operation == DataPackageOperation.Move && clipboardToken == token)
             {
                 try { if (await ClipboardIdAsync(Clipboard.GetContent()) == token) Clipboard.Clear(); }
                 catch (Exception ex) { Services.AppLog.Error("移動完了後のクリップボード更新: " + ex.Message); }
                 ClearCutAppearance(); LeftPane.RecheckFolder(); RightPane.RecheckFolder();
             }
         });
-        Clipboard.SetContent(package); clipboardToken = token; cutPaths = move ? items.Select(x => x.Path).ToArray() : [];
+        FileTransferData.SetPaths(package, paths, move, Completed); package.SetData(ClipboardMarker, token);
+        package.OperationCompleted += (_, args) => Completed(args.Operation);
+        Clipboard.SetContent(package); clipboardToken = token; cutPaths = move ? paths.ToArray() : [];
         LeftPane.SetCutPaths(cutPaths); RightPane.SetCutPaths(cutPaths);
     }
     private async Task PasteFilesAsync(DataPackageView data, string folder)
     {
         var token = await ClipboardIdAsync(data);
-        var items = await data.GetStorageItemsAsync();
-        var paths = items.Select(x => x.Path).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+        var paths = await FileTransferData.GetPathsAsync(data);
         bool move = data.RequestedOperation.HasFlag(DataPackageOperation.Move);
         var results = await RunOperationAsync(move ? FileAction.Move : FileAction.Copy, paths, folder);
         bool success = results.Count > 0 && results.All(x => x.Result == "成功") && paths.All(path => results.Any(x => string.Equals(x.Path, path, StringComparison.OrdinalIgnoreCase) && x.Result == "成功"));
@@ -72,8 +71,7 @@ public sealed partial class MainWindow
         var remaining = paths.Where(path => !results.Any(x => string.Equals(x.Path, path, StringComparison.OrdinalIgnoreCase) && x.Result == "成功") || results.Any(x => x.Result != "成功" && (string.Equals(x.Path, path, StringComparison.OrdinalIgnoreCase) || x.Path.StartsWith(Path.TrimEndingDirectorySeparator(path) + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)))).ToArray();
         if (remaining.Length > 0)
         {
-            var keep = remaining.ToHashSet(StringComparer.OrdinalIgnoreCase);
-            PublishFileClipboard(items.Where(x => keep.Contains(x.Path)).ToArray(), true);
+            PublishFileClipboard(remaining, true);
         }
     }
 }

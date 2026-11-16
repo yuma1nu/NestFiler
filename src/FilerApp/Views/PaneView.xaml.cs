@@ -120,7 +120,11 @@ public sealed partial class PaneView : UserControl
     {
         if (Selected is not { } file) return;
         if (file.IsDirectory) { await NavigateAsync(file.Path); return; }
-        try { await Task.Run(() => Process.Start(new ProcessStartInfo(file.Path) { UseShellExecute = true })); Visited?.Invoke(file.Path, false); }
+        await OpenFileAsync(file.Path);
+    }
+    public async Task OpenFileAsync(string path)
+    {
+        try { await Task.Run(() => Process.Start(new ProcessStartInfo(path) { UseShellExecute = true })); Visited?.Invoke(path, false); }
         catch (Exception ex) { Error?.Invoke($"開けません: {ex.Message}"); }
     }
 }

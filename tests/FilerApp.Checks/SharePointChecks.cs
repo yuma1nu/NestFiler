@@ -43,5 +43,29 @@ internal static class SharePointChecks
         catch (IOException) { check(true, "到達不能な貼り付け先は失敗を返す"); }
         try { await SharePointShortcutService.CreateAsync(first, direct, OfficeApplication.PowerPoint, "failure"); throw new Exception("失敗未検出"); }
         catch (IOException) { check(original.AsEnumerable().SequenceEqual(await File.ReadAllBytesAsync(first)), "ファイルを貼り付け先に指定しても元データを変更しない"); }
+        await CheckOperationsAsync(root, check);
+    }
+
+    internal static async Task CheckOperationsAsync(string root, Action<bool, string> check)
+    {
+        var source = Directory.CreateDirectory(Path.Combine(root, "shortcut-operations-source")).FullName;
+        var copy = Directory.CreateDirectory(Path.Combine(root, "shortcut-operations-copy")).FullName;
+        var move = Directory.CreateDirectory(Path.Combine(root, "shortcut-operations-move")).FullName;
+        var link = SharePointLink.Parse("https://tenant.sharepoint.com/:p:/s/lab/EXopaque?e=fixture");
+        var shortcut = await SharePointShortcutService.CreateAsync(source, link, OfficeApplication.PowerPoint, "操作確認");
+        var bytes = await File.ReadAllBytesAsync(shortcut);
+        var operations = new FileOperationService { SuppressErrorDialogsForChecks = true };
+        var copied = await operations.ExecuteAsync(FileAction.Copy, [shortcut], copy, 0, default);
+        Console.WriteLine(string.Join("; ", copied.Select(x => x.Path + " " + x.Result)));
+        var copiedFile = Path.Combine(copy, Path.GetFileName(shortcut));
+        check(copied.Any(x => x.Result == "成功") && File.Exists(copiedFile) && bytes.AsEnumerable().SequenceEqual(await File.ReadAllBytesAsync(copiedFile)), "Officeショートカット本体のShellコピー");
+        var moved = await operations.ExecuteAsync(FileAction.Move, [copiedFile], move, 0, default);
+        var movedFile = Path.Combine(move, Path.GetFileName(shortcut));
+        check(moved.Any(x => x.Result == "成功") && File.Exists(movedFile) && !File.Exists(copiedFile) && File.Exists(shortcut), "Officeショートカット本体のShell移動・コピー元保持");
+        var renamedFile = Path.Combine(move, "変更後.pptx.url");
+        var renamed = await operations.ExecuteAsync(FileAction.Rename, [movedFile], renamedFile, 0, default);
+        check(renamed.Any(x => x.Result == "成功") && File.Exists(renamedFile) && !File.Exists(movedFile), "Officeショートカット本体のShellリネーム");
+        var recycled = await operations.ExecuteAsync(FileAction.Recycle, [renamedFile], null, 0, default);
+        check(recycled.Any(x => x.Result == "成功" && x.Destination != null) && !File.Exists(renamedFile) && File.Exists(shortcut), "Officeショートカット本体をごみ箱へ移動・元ファイル保持");
     }
 }

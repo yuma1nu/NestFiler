@@ -5,6 +5,7 @@ public sealed class FavoriteNode
     public string Id { get; set; } = Guid.NewGuid().ToString();
     public string Name { get; set; } = "新しいフォルダ";
     public string? Path { get; set; }
+    public bool IsFileLink { get; set; }
     public bool Expanded { get; set; } = true;
     public List<FavoriteNode> Children { get; set; } = [];
     public bool IsFolder => Path == null;

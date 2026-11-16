@@ -2,25 +2,37 @@ using System.Runtime.InteropServices;
 
 namespace FilerApp.Services;
 
-public enum FileAction : uint { Move = 1, Copy = 2, Recycle = 3, Rename = 4 }
-public sealed record OperationResult(string Path, string Result, string? Destination = null);
+public enum FileAction : uint { Move = 1, Copy = 2, Recycle = 3, Rename = 4, DeletePermanently = 5 }
+public sealed record OperationResult(string Path, string Result, string? Destination = null)
+{
+    public bool Succeeded => Result is "成功" or "成功（完全削除）";
+}
 
 // Shell owns collision prompts and the cancellable progress window. Never suppress
-// confirmations. The progress sink additionally rejects deletion without recycle flags.
+// copy/move confirmations. Recycle-only mode rejects deletion without recycle
+// flags; permanent deletion requires an explicitly approved deletion plan.
 public sealed class FileOperationService
 {
     // Dedicated fixture checks only: errors are returned without opening a modal
     // error window. Collision/overwrite confirmation is never suppressed.
     internal bool SuppressErrorDialogsForChecks { get; init; }
     public Task<List<OperationResult>> ExecuteAsync(FileAction action, string[] sources, string? destination, nint owner, CancellationToken token, IProgress<string>? progress = null)
+        => ExecuteBatchAsync(sources.Select(source => (Action: action, Source: source, Destination: destination)).ToArray(), false, owner, token, progress);
+
+    public Task<List<OperationResult>> ExecuteDeletionAsync(DeletionPlan plan, bool permanentDeletionConfirmed, nint owner, CancellationToken token, IProgress<string>? progress = null)
+        => ExecuteBatchAsync(plan.Items.Select(item => (Action: item.Permanent ? FileAction.DeletePermanently : FileAction.Recycle, Source: item.Path, Destination: (string?)null)).ToArray(), permanentDeletionConfirmed, owner, token, progress);
+
+    private Task<List<OperationResult>> ExecuteBatchAsync((FileAction Action, string Source, string? Destination)[] batch, bool permanentDeletionConfirmed, nint owner, CancellationToken token, IProgress<string>? progress)
     {
+        if (!permanentDeletionConfirmed && batch.Any(x => x.Action == FileAction.DeletePermanently))
+            return Task.FromResult(batch.Select(x => new OperationResult(x.Source, "未実行: 完全削除が確認されていません")).ToList());
         var completion = new TaskCompletionSource<List<OperationResult>>(TaskCreationOptions.RunContinuationsAsynchronously);
         var worker = new Thread(() =>
         {
             var results = new List<OperationResult>();
             try
             {
-                foreach (var source in sources)
+                foreach (var (action, source, destination) in batch)
                 {
                     if (token.IsCancellationRequested) { results.Add(new(source, "未実行（中断）")); continue; }
                     try
@@ -41,8 +53,12 @@ public sealed class FileOperationService
                         {
                             operation = (IShellOperation)Activator.CreateInstance(Type.GetTypeFromCLSID(new Guid("3ad05575-8857-4850-9277-11b85bdb8e09"))!)!;
                             operation.SetOwnerWindow(owner);
-                            operation.SetOperationFlags(0x40 | 0x4000 | 0x00080000 | (SuppressErrorDialogsForChecks ? 0x0400u | 0x0004u : 0));
-                            var sink = new OperationSink(results, token, progress); operation.Advise(sink, out cookie);
+                            // Only an explicitly approved permanent-delete batch
+                            // omits recycling. Its application dialog is the confirmation.
+                            bool permanent = action == FileAction.DeletePermanently;
+                            uint flags = permanent ? 0x0010u : 0x40u | 0x4000u | 0x00080000u;
+                            operation.SetOperationFlags(flags | (SuppressErrorDialogsForChecks ? 0x0400u | 0x0004u : 0));
+                            var sink = new OperationSink(results, token, progress, permanent); operation.Advise(sink, out cookie);
                             item = ShellInterop.Item(full);
                             if (action is FileAction.Copy or FileAction.Move) target = ShellInterop.Item(Path.GetFullPath(destination!));
                             switch (action)
@@ -51,6 +67,7 @@ public sealed class FileOperationService
                                 case FileAction.Move: operation.MoveItem(item, target, null, 0); break;
                                 case FileAction.Rename: operation.RenameItem(item, Path.GetFileName(destination!), 0); break;
                                 case FileAction.Recycle: operation.DeleteItem(item, 0); break;
+                                case FileAction.DeletePermanently: operation.DeleteItem(item, 0); break;
                             }
                             var before = results.Count;
                             var code = operation.PerformOperations(); operation.GetAnyOperationsAborted(out var aborted);

@@ -1,7 +1,6 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Windows.ApplicationModel.DataTransfer;
-using Windows.Storage;
 using FilerApp.Services;
 using Microsoft.UI.Xaml.Media;
 
@@ -69,13 +68,6 @@ public sealed partial class PaneView
         ClearDropTarget(); dropTarget = target;
         if (target != null) target.Background = (Brush)Application.Current.Resources["SubtleFillColorSecondaryBrush"];
     }
-    public async Task<List<IStorageItem>> GetStorageItemsAsync()
-    {
-        var entries = SelectedEntries().DistinctBy(x => x.Path, StringComparer.OrdinalIgnoreCase).ToArray();
-        var items = new List<IStorageItem>();
-        foreach (var entry in entries) items.Add(entry.IsDirectory ? await StorageFolder.GetFolderFromPathAsync(entry.Path) : await StorageFile.GetFileFromPathAsync(entry.Path));
-        return items;
-    }
     private void InitializeTransfer()
     {
         // Resolve the pressed row before WinUI starts its native list drag.
@@ -106,7 +98,7 @@ public sealed partial class PaneView
         };
         FileArea.DragOver += (_, args) =>
         {
-            if (!args.DataView.Contains(StandardDataFormats.StorageItems)) return;
+            if (!FileTransferData.ContainsFiles(args.DataView)) return;
             if (Current?.IsSearch == true) { args.AcceptedOperation = DataPackageOperation.None; args.Handled = true; return; }
             bool move = args.Modifiers.HasFlag(Windows.ApplicationModel.DataTransfer.DragDrop.DragDropModifiers.Shift);
             args.AcceptedOperation = move ? DataPackageOperation.Move : DataPackageOperation.Copy;
@@ -123,10 +115,10 @@ public sealed partial class PaneView
             ClearDropTarget(); args.AcceptedOperation = DataPackageOperation.None; args.Handled = true;
             try
             {
-                var items = await args.DataView.GetStorageItemsAsync();
+                var paths = await FileTransferData.GetPathsAsync(args.DataView);
                 if (Dropped is { } drop && destination != null)
                 {
-                    var results = await drop(items.Select(x => x.Path).ToArray(), move, destination);
+                    var results = await drop(paths, move, destination);
                     if (results.Count > 0 && results.All(x => x.Result == "成功")) args.AcceptedOperation = move ? DataPackageOperation.Move : DataPackageOperation.Copy;
                     // Partial success is not reported as a completed whole-package move.
                 }
@@ -137,19 +129,7 @@ public sealed partial class PaneView
     }
     private void PopulateDragPackage(DataPackage package, Core.FileEntry[] selected)
     {
-        package.RequestedOperation = DataPackageOperation.Copy;
-        package.SetDataProvider(StandardDataFormats.StorageItems, async request =>
-        {
-            var deferral = request.GetDeferral();
-            try
-            {
-                var items = new List<IStorageItem>();
-                foreach (var entry in selected) items.Add(await Task.Run(async () => (IStorageItem)(entry.IsDirectory ? await StorageFolder.GetFolderFromPathAsync(entry.Path) : await StorageFile.GetFileFromPathAsync(entry.Path))));
-                request.SetData(items);
-            }
-            catch (Exception ex) { DispatcherQueue.TryEnqueue(() => Error?.Invoke(ex.Message)); }
-            finally { deferral.Complete(); }
-        });
+        FileTransferData.SetPaths(package, selected.Select(x => x.Path).ToArray());
     }
 }
 

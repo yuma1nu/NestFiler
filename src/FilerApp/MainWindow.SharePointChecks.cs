@@ -71,6 +71,59 @@ public sealed partial class MainWindow
             var search = RightPane.OpenSearchTab("Report", new SearchOptions(b, "Report", false, false, false, false, "", "", "UTF-8")); await search.SearchWork!;
             await PasteIntoPaneAsync(RightPane, b, text.GetView());
             Check(Directory.GetFiles(b).Length == countBefore, "search result tabs cannot receive shortcuts");
+            await LeftPane.NavigateAsync(a); await RightPane.NavigateAsync(b);
+            SetActive(LeftPane); LeftPane.FocusFiles();
+            var shellPackage = new DataPackage(); FileTransferDataForCheck(shellPackage, [shortcut, file], false);
+            Check(Services.FileTransferData.ReadNativePaths(shellPackage)?.SequenceEqual(new[] { shortcut, file }) == true, "Explorer-compatible CF_HDROP contains physical shortcut and ordinary file paths");
+            Check((await Services.FileTransferData.GetPathsAsync(shellPackage.GetView())).SequenceEqual(new[] { shortcut, file }), "DataPackageView reads physical paths without StorageFile shortcut resolution");
+            var destination = Directory.CreateDirectory(Path.Combine(root, "shortcut-copy")).FullName;
+            await PasteFilesAsync(shellPackage.GetView(), destination);
+            var pasted = Path.Combine(destination, Path.GetFileName(shortcut));
+            Check(File.Exists(pasted) && File.Exists(shortcut) && File.Exists(Path.Combine(destination, "ordinary.txt")), "clipboard paste copies shortcut and normal file together");
+            var movePackage = new DataPackage(); FileTransferDataForCheck(movePackage, [pasted], true);
+            var movedFolder = Directory.CreateDirectory(Path.Combine(root, "shortcut-move")).FullName;
+            await PasteFilesAsync(movePackage.GetView(), movedFolder);
+            var movedPath = Path.Combine(movedFolder, Path.GetFileName(pasted));
+            Check(File.Exists(movedPath) && !File.Exists(pasted) && File.Exists(shortcut), "clipboard cut-paste moves shortcut body without changing original target");
+            await LeftPane.NavigateAsync(movedFolder); LeftPane.DebugSelectFile(movedPath);
+            var deleted = await RunOperationAsync(Services.FileAction.Recycle, LeftPane.SelectedPaths, null);
+            Check(deleted.Any(x => x.Result == "成功") && !File.Exists(movedPath) && File.Exists(shortcut), "UI file operation recycles shortcut body and leaves source shortcut intact");
+            var favoriteFolder = Directory.CreateDirectory(Path.Combine(root, "favorite-folder")).FullName;
+            var favoritesPackage = new DataPackage(); Services.FileTransferData.SetPaths(favoritesPackage, [favoriteFolder, shortcut, file]);
+            var initialFavorites = FavoriteRoots.Count;
+            await RegisterFavoriteDropAsync(favoritesPackage.GetView(), null, null);
+            Check(FavoriteRoots.Count == initialFavorites + 3 && FavoriteRoots.Any(x => x.Path == favoriteFolder && !x.IsFileLink) && FavoriteRoots.Any(x => x.Path == shortcut && x.IsFileLink), "drop registers folders, files and Office shortcuts at favorites root without StorageFile");
+            Check(File.Exists(shortcut) && File.Exists(file) && Directory.Exists(favoriteFolder) && favoritesPackage.RequestedOperation == DataPackageOperation.Copy, "favorite registration never moves or deletes physical source items");
+            var virtualFolder = new FavoriteNode { Name = "入れ子", Expanded = false };
+            var anchor = new FavoriteNode { Name = "既存", Path = a }; virtualFolder.Children.Add(anchor); FavoriteRoots.Add(virtualFolder);
+            await RegisterFavoriteDropAsync(favoritesPackage.GetView(), virtualFolder, anchor.Id);
+            Check(virtualFolder.Expanded && virtualFolder.Children.Count == 4 && virtualFolder.Children[0].Path == favoriteFolder && virtualFolder.Children[^1] == anchor, "drop into virtual folder respects insertion position and expands it");
+            await RegisterFavoriteDropAsync(favoritesPackage.GetView(), virtualFolder, null);
+            Check(virtualFolder.Children.Count == 4 && FavoriteRoots.Any(x => x.Path == shortcut), "duplicates in one group are skipped while another group may contain the same path");
+            await store.SaveAsync(state); var saved = await store.LoadAsync();
+            Check(FavoriteTree.Walk(FavoriteTree.GetRoots(saved)).Any(x => x.Path == shortcut && x.IsFileLink), "file favorite type and nested drop registrations survive SQLite restore");
+            var partialDrop = new DataPackage(); Services.FileTransferData.SetPaths(partialDrop, [favoriteFolder, Path.Combine(root, "missing-favorite")]);
+            await RegisterFavoriteDropAsync(partialDrop.GetView(), virtualFolder, null);
+            Check(virtualFolder.Children.Count == 4 && Status.Text.Contains("登録失敗"), "missing drop item is reported without losing other registrations");
+            foreach (var theme in new[] { ElementTheme.Light, ElementTheme.Dark })
+            {
+                Root.RequestedTheme = theme; RightPane.SetDisplayMode(FileViewMode.LargeIcons); RightPane.FocusFiles();
+                DualToggle.IsChecked = true; Microsoft.UI.Xaml.VisualStateManager.GoToState(DualToggle, "Checked", false);
+                await Task.Delay(150); Root.UpdateLayout();
+                DependencyObject? FindPresenter(DependencyObject node)
+                {
+                    if (node is ContentPresenter) return node;
+                    for (int i = 0; i < Microsoft.UI.Xaml.Media.VisualTreeHelper.GetChildrenCount(node); i++)
+                        if (FindPresenter(Microsoft.UI.Xaml.Media.VisualTreeHelper.GetChild(node, i)) is { } found) return found;
+                    return null;
+                }
+                var content = FindPresenter(DualToggle) as ContentPresenter;
+                var brush = content?.Background as Microsoft.UI.Xaml.Media.SolidColorBrush;
+                Check(brush != null && brush.Color.R == brush.Color.G && brush.Color.G == brush.Color.B && brush.Color.A is > 0 and <= 64, theme + " checked toolbar icon uses a translucent neutral background");
+                RightPane.DebugAssertQuietSelection();
+                results.Add("PASS " + theme + " file selection uses a translucent neutral background without accent indicator");
+            }
+            Root.RequestedTheme = ElementTheme.Default;
         }
         catch (Exception ex) { results.Add("FAIL " + ex); }
         finally
@@ -80,5 +133,6 @@ public sealed partial class MainWindow
             closing = true; Close();
         }
     }
+    private static void FileTransferDataForCheck(DataPackage package, string[] paths, bool move) => Services.FileTransferData.SetPaths(package, paths, move);
 }
 #endif

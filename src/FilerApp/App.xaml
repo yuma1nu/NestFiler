@@ -2,24 +2,45 @@
  <Application.Resources><ResourceDictionary><ResourceDictionary.MergedDictionaries><XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls"/></ResourceDictionary.MergedDictionaries>
   <ResourceDictionary.ThemeDictionaries>
    <ResourceDictionary x:Key="Light">
+    <Color x:Key="QuietSelectedColor">#14000000</Color><Color x:Key="QuietSelectedHoverColor">#20000000</Color><Color x:Key="QuietSelectedPressedColor">#29000000</Color>
     <SolidColorBrush x:Key="FavoriteSectionBackgroundBrush" Color="#0D000000"/>
     <SolidColorBrush x:Key="ModifiedLastDayBrush" Color="#135F96"/><SolidColorBrush x:Key="ModifiedLastWeekBrush" Color="#36677E"/>
     <SolidColorBrush x:Key="ModifiedLastMonthBrush" Color="#526273"/><SolidColorBrush x:Key="ModifiedLastYearBrush" Color="#626B77"/>
     <SolidColorBrush x:Key="ModifiedOlderBrush" Color="#68717D"/><SolidColorBrush x:Key="ModifiedFutureBrush" Color="#526273"/><SolidColorBrush x:Key="ModifiedUnknownBrush" Color="#68717D"/>
    </ResourceDictionary>
    <ResourceDictionary x:Key="Dark">
+    <Color x:Key="QuietSelectedColor">#18FFFFFF</Color><Color x:Key="QuietSelectedHoverColor">#24FFFFFF</Color><Color x:Key="QuietSelectedPressedColor">#30FFFFFF</Color>
     <SolidColorBrush x:Key="FavoriteSectionBackgroundBrush" Color="#12FFFFFF"/>
     <SolidColorBrush x:Key="ModifiedLastDayBrush" Color="#AAD8F5"/><SolidColorBrush x:Key="ModifiedLastWeekBrush" Color="#A5BBCD"/>
     <SolidColorBrush x:Key="ModifiedLastMonthBrush" Color="#A6AFBB"/><SolidColorBrush x:Key="ModifiedLastYearBrush" Color="#9BA3AE"/>
     <SolidColorBrush x:Key="ModifiedOlderBrush" Color="#9099A6"/><SolidColorBrush x:Key="ModifiedFutureBrush" Color="#A6AFBB"/><SolidColorBrush x:Key="ModifiedUnknownBrush" Color="#9099A6"/>
    </ResourceDictionary>
    <ResourceDictionary x:Key="HighContrast">
+    <Color x:Key="QuietSelectedColor">{ThemeResource SystemColorHighlightColor}</Color><Color x:Key="QuietSelectedHoverColor">{ThemeResource SystemColorHighlightColor}</Color><Color x:Key="QuietSelectedPressedColor">{ThemeResource SystemColorHighlightColor}</Color>
+    <x:Boolean x:Key="ListViewItemSelectionIndicatorVisualEnabled">True</x:Boolean>
     <SolidColorBrush x:Key="FavoriteSectionBackgroundBrush" Color="{ThemeResource SystemColorButtonFaceColor}"/>
     <SolidColorBrush x:Key="ModifiedLastDayBrush" Color="{ThemeResource SystemColorWindowTextColor}"/><SolidColorBrush x:Key="ModifiedLastWeekBrush" Color="{ThemeResource SystemColorWindowTextColor}"/>
     <SolidColorBrush x:Key="ModifiedLastMonthBrush" Color="{ThemeResource SystemColorWindowTextColor}"/><SolidColorBrush x:Key="ModifiedLastYearBrush" Color="{ThemeResource SystemColorWindowTextColor}"/>
     <SolidColorBrush x:Key="ModifiedOlderBrush" Color="{ThemeResource SystemColorWindowTextColor}"/><SolidColorBrush x:Key="ModifiedFutureBrush" Color="{ThemeResource SystemColorWindowTextColor}"/><SolidColorBrush x:Key="ModifiedUnknownBrush" Color="{ThemeResource SystemColorWindowTextColor}"/>
    </ResourceDictionary>
   </ResourceDictionary.ThemeDictionaries>
+  <SolidColorBrush x:Key="ToggleButtonBackgroundChecked" Color="{ThemeResource QuietSelectedColor}"/>
+  <SolidColorBrush x:Key="ToggleButtonBackgroundCheckedPointerOver" Color="{ThemeResource QuietSelectedHoverColor}"/>
+  <SolidColorBrush x:Key="ToggleButtonBackgroundCheckedPressed" Color="{ThemeResource QuietSelectedPressedColor}"/>
+  <SolidColorBrush x:Key="ToggleButtonForegroundChecked" Color="{ThemeResource TextFillColorPrimary}"/>
+  <SolidColorBrush x:Key="ToggleButtonForegroundCheckedPointerOver" Color="{ThemeResource TextFillColorPrimary}"/>
+  <SolidColorBrush x:Key="ToggleButtonForegroundCheckedPressed" Color="{ThemeResource TextFillColorPrimary}"/>
+  <SolidColorBrush x:Key="ToggleButtonBorderBrushChecked" Color="Transparent"/>
+  <SolidColorBrush x:Key="ToggleButtonBorderBrushCheckedPointerOver" Color="Transparent"/>
+  <SolidColorBrush x:Key="ToggleButtonBorderBrushCheckedPressed" Color="Transparent"/>
+  <SolidColorBrush x:Key="ListViewItemBackgroundSelected" Color="{ThemeResource QuietSelectedColor}"/>
+  <SolidColorBrush x:Key="ListViewItemBackgroundSelectedPointerOver" Color="{ThemeResource QuietSelectedHoverColor}"/>
+  <SolidColorBrush x:Key="ListViewItemBackgroundSelectedPressed" Color="{ThemeResource QuietSelectedPressedColor}"/>
+  <SolidColorBrush x:Key="ListViewItemSelectionIndicatorBrush" Color="Transparent"/>
+  <SolidColorBrush x:Key="ListViewItemSelectionIndicatorPointerOverBrush" Color="Transparent"/>
+  <SolidColorBrush x:Key="ListViewItemSelectionIndicatorPressedBrush" Color="Transparent"/>
+  <SolidColorBrush x:Key="ListViewItemSelectionIndicatorDisabledBrush" Color="Transparent"/>
+  <x:Boolean x:Key="ListViewItemSelectionIndicatorVisualEnabled">False</x:Boolean>
   <Thickness x:Key="SurfacePadding">6</Thickness><CornerRadius x:Key="SurfaceRadius">4</CornerRadius>
   <x:Double x:Key="BodyFontSize">13</x:Double>
   <x:Double x:Key="FileRowHeight">28</x:Double>

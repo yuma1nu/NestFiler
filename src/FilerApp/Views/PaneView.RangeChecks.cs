@@ -67,6 +67,14 @@ public sealed partial class PaneView
         if (Frame.BorderThickness != new Thickness(0) || (ActivePaneSurface.Visibility == Visibility.Visible) != active) throw new InvalidOperationException("Pane still uses a border or has wrong active background state");
         if (Frame.Background is SolidColorBrush background && pageBackground is SolidColorBrush page && background.Color != page.Color) throw new InvalidOperationException("Inactive pane background differs from the application background");
     }
+    internal void DebugAssertQuietSelection()
+    {
+        Files.UpdateLayout();
+        var row = Files.ContainerFromIndex(0) as DependencyObject;
+        var presenter = row == null ? null : FindVisualChild<Microsoft.UI.Xaml.Controls.Primitives.ListViewItemPresenter>(row);
+        if (presenter == null || presenter.SelectionIndicatorVisualEnabled && (presenter.SelectionIndicatorBrush is not SolidColorBrush indicator || indicator.Color.A != 0) || presenter.SelectedBackground is not SolidColorBrush brush || brush.Color.R != brush.Color.G || brush.Color.G != brush.Color.B || brush.Color.A is 0 or > 64)
+            throw new InvalidOperationException($"File selection still uses an accent indicator/color or an opaque background: row={row?.GetType().Name}, presenter={presenter?.GetType().Name}, indicator={presenter?.SelectionIndicatorVisualEnabled}, background={(presenter?.SelectedBackground as SolidColorBrush)?.Color}");
+    }
     internal async Task DebugCheckDateTextAsync()
     {
         SetDisplayMode(FileViewMode.Details); await Task.Delay(50); Files.UpdateLayout();

@@ -4,7 +4,7 @@
   <Grid x:Name="Workspace">
    <Grid.ColumnDefinitions><ColumnDefinition x:Name="SidebarColumn" Width="210" MinWidth="140"/><ColumnDefinition x:Name="SidebarDividerColumn" Width="5"/><ColumnDefinition x:Name="CenterColumn" Width="*" MinWidth="360"/><ColumnDefinition x:Name="HistoryDividerColumn" Width="5"/><ColumnDefinition x:Name="HistoryColumn" Width="260" MinWidth="180"/></Grid.ColumnDefinitions>
    <Grid x:Name="LeftSidebar"><Grid.RowDefinitions><RowDefinition x:Name="FavoritesRow" Height="2*" MinHeight="80"/><RowDefinition Height="5"/><RowDefinition x:Name="LeftEmptyRow" Height="*" MinHeight="60"/></Grid.RowDefinitions>
-    <Grid><Grid.RowDefinitions><RowDefinition Height="28"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+    <Grid x:Name="FavoritesSurface" Background="Transparent"><Grid.RowDefinitions><RowDefinition Height="28"/><RowDefinition Height="*"/></Grid.RowDefinitions>
      <Grid x:Name="FavoriteRootTarget" Padding="4,0"><TextBlock Text="お気に入り" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/><Button Style="{StaticResource NavigationButton}" Content="＋" HorizontalAlignment="Right" Click="AddGroup" ToolTipService.ToolTip="仮想フォルダを作成"/></Grid>
      <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled"><StackPanel x:Name="FavoriteList" Spacing="0"/></ScrollViewer>
     </Grid>
