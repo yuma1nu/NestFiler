@@ -1,9 +1,10 @@
+param([string]$ExecutablePath)
 $ErrorActionPreference = 'Stop'
 $root = Split-Path $PSScriptRoot -Parent
 $profile = Join-Path $root ('artifacts/input-check-' + [guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Path $profile | Out-Null
 $start = [Diagnostics.ProcessStartInfo]::new()
-$start.FileName = Join-Path $root 'src/FilerApp/bin/x64/Debug/net10.0-windows10.0.26100.0/win-x64/NestFiler.exe'
+$start.FileName = if ($ExecutablePath) { (Resolve-Path -LiteralPath $ExecutablePath).Path } else { Join-Path $root 'src/FilerApp/bin/x64/Debug/net10.0-windows10.0.26100.0/win-x64/NestFiler.exe' }
 $start.UseShellExecute = $false
 $start.Environment['FILERAPP_PROFILE_DIR'] = $profile
 $start.Environment['FILERAPP_INPUT_CHECK'] = '1'

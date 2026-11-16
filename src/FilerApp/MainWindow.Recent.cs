@@ -19,6 +19,7 @@ public sealed partial class MainWindow
             var button = SidebarRow(Path.GetFileName(entry.Path.TrimEnd('\\')) is { Length: > 0 } name ? name : entry.Path, entry.Directory ? "\uE8B7" : "\uE8A5");
             ToolTipService.SetToolTip(button, $"{entry.Path}\n{entry.Used.LocalDateTime:g}\n存在・接続状態は開く際に確認");
             button.Click += async (_, _) => await OpenRecentPathAsync(entry.Path, entry.Directory);
+            Views.MiddleClick.Attach(button, () => OpenPathInNewTabAsync(entry.Path, entry.Directory), ShowError);
             var menu = new MenuFlyout();
             menu.Items.Add(Menu("履歴から削除", (_, _) => { state.Recent.Remove(entry); RenderRecent(); ScheduleSave(); }));
             if (entry.Directory) menu.Items.Add(Menu("お気に入りに登録", async (_, _) => { await active.NavigateAsync(entry.Path); AddFavorite(this, new RoutedEventArgs()); }));

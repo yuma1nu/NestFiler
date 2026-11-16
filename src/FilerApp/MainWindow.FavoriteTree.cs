@@ -72,11 +72,12 @@ public sealed partial class MainWindow
                         content.Children.Insert(0, new Views.FileTypeIcon { IconSize = 16, Entry = new(node.Path!, node.Name, false, 0, DateTime.MinValue) });
                     }
                     row.Click += async (_, _) => { if (node.IsFileLink) await active.OpenFileAsync(node.Path!); else await active.NavigateAsync(node.Path!); };
+                    Views.MiddleClick.Attach(row, () => OpenPathInNewTabAsync(node.Path!, !node.IsFileLink), ShowError);
                 }
-                ToolTipService.SetToolTip(row, node.IsFolder ? $"{node.Name}（整理用の仮想フォルダ）\n中央にドロップ: 中へ移動 / 上下端: 前後へ移動" : node.Path);
+                ToolTipService.SetToolTip(row, node.IsFolder ? $"{node.Name}（整理用の仮想フォルダ）\n中央にドロップ: 中へ移動 / 上下端: 前後へ移動" : node.Path + (node.IsFileLink ? "\n中クリック: 格納フォルダを新しいタブで開く" : "\n中クリック: 新しいタブで開く"));
                 var menu = new MenuFlyout();
                 if (node.IsFolder) menu.Items.Add(Menu("この中に仮想フォルダを作成", async (_, _) => await CreateFavoriteFolderAsync(node)));
-                else menu.Items.Add(Menu(node.IsFileLink ? "格納フォルダを新しいタブで開く" : "新しいタブで開く", async (_, _) => await active.NavigateAsync(node.IsFileLink ? Path.GetDirectoryName(node.Path!)! : node.Path!, true)));
+                else menu.Items.Add(Menu(node.IsFileLink ? "格納フォルダを新しいタブで開く" : "新しいタブで開く", async (_, _) => await OpenPathInNewTabAsync(node.Path!, !node.IsFileLink)));
                 menu.Items.Add(Menu("名前を変更", async (_, _) => { if (await AskAsync("表示名", node.Name) is { } name) { node.Name = name; RenderFavorites(); ScheduleSave(); } }));
                 menu.Items.Add(Menu("最上位へ移動", (_, _) => { FavoriteTree.Move(FavoriteRoots, node.Id, null); RenderFavorites(); ScheduleSave(); }));
                 menu.Items.Add(Menu(node.IsFolder ? "仮想フォルダと配下の登録を解除" : "登録解除", async (_, _) =>

@@ -1,5 +1,29 @@
 # 試用版の公開確認
 
+## v0.1.3（2026-11-17）
+
+- `dotnet run --project tests/FilerApp.Checks -c Release --no-restore`: 166 件成功。
+- `dotnet build src/FilerApp/FilerApp.csproj -c Debug -p:Platform=x64 --no-restore -o artifacts/check-debug-v0.1.3`: 成功、警告 0・エラー 0。起動中のアプリとは別フォルダで検証。
+- 上記ビルドを `-ExecutablePath` に指定し、`CheckMiddleMouse.ps1` 8 件、`CheckInput.ps1` 7 件、`CheckSharePoint.ps1` 31 件、`CheckPaneFocus.ps1` 44 件が成功。
+- `scripts/Publish.ps1`: Release の自己完結ポータブル ZIP と SHA256 を生成。
+- `scripts/CheckPortable.ps1 -ZipPath ./artifacts/NestFiler-win-x64-v0.1.3.zip`: 4 項目成功。ZIP 展開後の起動応答、二重起動防止、設定保存、再起動、アプリのエラーログなしを確認。
+- 配布 exe の製品名 `Nest Filer` とファイルバージョン `0.1.3.0` を確認。
+
+ZIP の SHA256:
+
+```text
+03609ff1646a28ec93694ef0226094ddacfd9181568287234b3e312defec2761
+```
+
+画面検証の記録:
+
+- `artifacts/middle-mouse-check-dc2f1496fac04b8ab65abdfe77b11930/middle-mouse-check.txt`
+- `artifacts/input-check-9669f36024b54fdf82ed440458a32331/input-check.txt`
+- `artifacts/sharepoint-check-e2a76c783d2c49b5879e0ea1ca84eb05/sharepoint-check.txt`
+- `artifacts/focus-check-585425e669104a80a5a9a931e37005bc/focus-check.txt`
+
+専用データ・隔離プロファイルで確認。中クリックの統合チェックはアプリの処理を呼び出すもので、実際の PointerPressed／Released や、押したまま移動して取り消すジェスチャーの実機確認は未完了です。今回のタブ位置復元確認は成功しましたが、過去の断続的なずれの解消を意味しません。クリーン PC、実 SMB 共有・認証済み Office 文書等の制約も継続します。
+
 ## v0.1.2（2026-11-16）
 
 - `dotnet run --project tests/FilerApp.Checks -c Release --no-restore`: ショートカット本体の操作・完全削除の確認と拒否・キャンセル・部分失敗を含む 166 件成功。

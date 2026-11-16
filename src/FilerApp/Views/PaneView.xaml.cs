@@ -80,10 +80,16 @@ public sealed partial class PaneView : UserControl
         if (index == Files.SelectedIndex) return;
         Files.SelectedItems.Clear(); Files.SelectedIndex = index; Files.ScrollIntoView(Files.SelectedItem);
     }
-    private void ActivatePane(object sender, PointerRoutedEventArgs e) => Activated?.Invoke(this);
+    private void ActivatePane(object sender, PointerRoutedEventArgs e)
+    {
+        // Middle-closing a background tab must not change the keyboard target.
+        if (e.GetCurrentPoint(this).Properties.PointerUpdateKind != Microsoft.UI.Input.PointerUpdateKind.MiddleButtonPressed) Activated?.Invoke(this);
+    }
     private async void TabChanged(object sender, SelectionChangedEventArgs e) { if (observedTab != null && Files.ItemsSource == observedTab.Entries) CapturePosition(observedTab); Frame.DataContext = Current; ObserveTabPath(); UpdateSearchControls(); UpdateFilterControls(); UpdateColumnView(); ColumnsChanged?.Invoke(); ConfigureWatcher(); RecheckFolder(); await RestorePositionAsync(); StateChanged?.Invoke(); SelectionUpdated?.Invoke(null); }
     private async void TabAdd(TabView sender, object args) => await NavigateAsync(Current?.Path ?? Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), true);
-    private void TabClose(TabView sender, TabViewTabCloseRequestedEventArgs args) { if (args.Item is TabViewModel model) CloseModel(model); }
+    // TabView raises the same request for X, Ctrl+F4 and middle-button clicks.
+    // Use the requested model, never Current, so a background tab closes once.
+    private void TabClose(TabView sender, TabViewTabCloseRequestedEventArgs args) { if ((args.Item as TabViewModel ?? args.Tab?.Tag as TabViewModel) is { } model) CloseModel(model); }
     private async void AddTab(object sender, RoutedEventArgs e) => await NavigateAsync(Current?.Path ?? Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), true);
     private void CloseTab(object sender, RoutedEventArgs e) => CloseCurrent();
     private async void Back(object sender, RoutedEventArgs e) => await GoBackAsync();
