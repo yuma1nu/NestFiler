@@ -12,5 +12,6 @@
     <Compile Include="../../src/FilerApp/Services/ShellFileIcon.cs" Link="ShellFileIcon.cs" />
     <Compile Include="../../src/FilerApp/Services/SharePointShortcutService.cs" Link="SharePointShortcutService.cs" />
     <Compile Include="../../src/FilerApp/Services/DeletionPlan.cs" Link="DeletionPlan.cs" />
+    <Compile Include="../../src/FilerApp/Services/FileCollision.cs" Link="FileCollision.cs" />
   </ItemGroup>
 </Project>

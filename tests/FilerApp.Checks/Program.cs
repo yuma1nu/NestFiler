@@ -148,6 +148,7 @@ try
     await FoundationChecks.RunAsync(root, Check);
     await SharePointChecks.RunAsync(root, Check);
     await DeletionChecks.RunAsync(root, Check);
+    await CollisionChecks.RunAsync(root, Check);
     Console.WriteLine($"{passed} checks passed; fixture: {root}");
 }
 finally

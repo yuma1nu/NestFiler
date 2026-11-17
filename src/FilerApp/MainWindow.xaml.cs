@@ -23,6 +23,7 @@ public sealed partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        InitializeTitleBarTheme();
         Root.PreviewKeyDown += PreviewSpaceKeyDown;
         Root.PreviewKeyUp += PreviewSpaceKeyUp;
         Root.PreviewKeyDown += RootKey;
@@ -32,7 +33,7 @@ public sealed partial class MainWindow : Window
         active = LeftPane; LeftPane.SetLabel("A"); RightPane.SetLabel("B");
         InitializeOperations(); InitializeSearch(); InitializeFavoriteRootDrop(); InitializePlaces();
         Root.SizeChanged += (_, _) => { ApplyDual(); previewDialog?.FitTo(Root.ActualWidth, Root.ActualHeight); };
-        Root.ActualThemeChanged += (_, _) => { if (previewDialog != null) previewDialog.RequestedTheme = Root.ActualTheme; };
+        Root.ActualThemeChanged += (_, _) => { UpdateTitleBarTheme(); if (previewDialog != null) previewDialog.RequestedTheme = Root.ActualTheme; };
         foreach (var pane in new[] { LeftPane, RightPane })
         {
             pane.MayAutoRefresh = CanRefreshListing;
@@ -55,6 +56,7 @@ public sealed partial class MainWindow : Window
     private async void Initialize(object sender, RoutedEventArgs e)
     {
         Root.Loaded -= Initialize;
+        UpdateTitleBarTheme();
         try { state = await store.LoadAsync(); } catch (Exception ex) { stateWritable = false; ShowError($"設定の読み込みに失敗しました。元の設定を保護するため保存を停止します: {ex.Message}"); }
         if (Environment.GetEnvironmentVariable("FILERAPP_PROFILE_DIR") != null && state.Left.Count == 0) { state.Left = [AppLog.DataDirectory]; state.Right = [AppLog.DataDirectory]; }
         RestoreWindowPlacement(); RestoreLayout();
@@ -68,6 +70,9 @@ public sealed partial class MainWindow : Window
         if (!stateWritable) Status.Text = "設定を読み込めなかったため、保存を停止しています。元のstate.dbを保持しています。";
         else if (store.RecoveredBackup) Status.Text = "設定の読み込みに失敗したため、直前の保存内容から復旧しました。";
 #if DEBUG
+        if (Environment.GetEnvironmentVariable("FILERAPP_NAVIGATION_PREVIEW") == "1" && Environment.GetEnvironmentVariable("FILERAPP_PROFILE_DIR") != null) { await ExportNavigationPreviewAsync(); return; }
+        if (Environment.GetEnvironmentVariable("FILERAPP_ENTER_CHECK") == "1" && Environment.GetEnvironmentVariable("FILERAPP_PROFILE_DIR") != null) { await RunEnterChecksAsync(); return; }
+        if (Environment.GetEnvironmentVariable("FILERAPP_COPY_DROP_CHECK") == "1" && Environment.GetEnvironmentVariable("FILERAPP_PROFILE_DIR") != null) { await RunCopyDropChecksAsync(); return; }
         if (Environment.GetEnvironmentVariable("FILERAPP_MIDDLE_MOUSE_CHECK") == "1" && Environment.GetEnvironmentVariable("FILERAPP_PROFILE_DIR") != null) { await PrepareMiddleMouseChecksAsync(); return; }
         if (Environment.GetEnvironmentVariable("FILERAPP_DELETION_CHECK") == "1" && Environment.GetEnvironmentVariable("FILERAPP_PROFILE_DIR") != null) { await RunDeletionChecksAsync(); return; }
         if (Environment.GetEnvironmentVariable("FILERAPP_SHAREPOINT_CHECK") == "1" && Environment.GetEnvironmentVariable("FILERAPP_PROFILE_DIR") != null) { await RunSharePointChecksAsync(); return; }

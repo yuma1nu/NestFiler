@@ -4,9 +4,9 @@ Windows 用の 2 ペインファイラー。左右独立のタブ、お気に入
 
 ## ダウンロード・起動
 
-[v0.1.3 試用版をダウンロード](https://github.com/yuma1nu/NestFiler/releases/tag/v0.1.3)
+[v0.1.4 試用版をダウンロード](https://github.com/yuma1nu/NestFiler/releases/tag/v0.1.4)
 
-1. リリースの Assets から `NestFiler-win-x64-v0.1.3.zip` をダウンロード。
+1. リリースの Assets から `NestFiler-win-x64-v0.1.4.zip` をダウンロード。
 2. ZIP をローカルの書き込み可能なフォルダに展開。
 3. フォルダ内の `NestFiler.exe` を起動。exe だけを取り出さず、同梱ファイルを維持してください。
 
@@ -27,6 +27,7 @@ Windows x64 向け（主対象は Windows 11、対象 API の最小 OS は Windo
 - ファイル名検索、テキスト検索（正規表現、UTF-8／CP932）、検索結果タブ。
 - Space キーで画像・テキスト・Markdown・CSV のプレビュー。
 - Windows 標準の右クリックメニュー、フォルダ変更の監視、単一起動。
+- v0.1.4からフォルダ行へのドロップ、同名時の「両方残す」、同じフォルダへの自動連番コピーに対応（[操作・検証](COPY-DROP-COLLISIONS.md)）。
 - v0.1.3からお気に入り・履歴の中クリックで新しいタブを開き、タブの中クリックで閉じられる（[操作・検証](MIDDLE-MOUSE.md)）。
 - v0.1.2からショートカットのファイル転送、お気に入りへのドラッグ登録、控えめな選択色を改善（[変更と検証](SHORTCUT-FAVORITE-FIXES.md)）。
 

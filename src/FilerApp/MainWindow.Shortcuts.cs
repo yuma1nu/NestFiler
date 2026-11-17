@@ -7,6 +7,9 @@ namespace FilerApp;
 public sealed partial class MainWindow
 {
     private static bool KeyDown(VirtualKey key) => Microsoft.UI.Input.InputKeyboardSource.GetKeyStateForCurrentThread(key).HasFlag(Windows.UI.Core.CoreVirtualKeyStates.Down);
+    private int enterOpenInProgress;
+    private bool CanOpenListingWithEnter(bool modified) => !modified && active.HasFileFocus() &&
+        !IsEditing(FocusManager.GetFocusedElement(Root.XamlRoot) as DependencyObject);
     private string? ListingCommand(VirtualKey key, bool control, bool shift)
     {
         if (!CanPasteIntoListing() || !active.ContainsFocus()) return null;
@@ -23,6 +26,20 @@ public sealed partial class MainWindow
         for (var node = focused; node != null; node = VisualTreeHelper.GetParent(node)) if (node is ContentDialog) return;
         bool control = KeyDown(VirtualKey.Control), shift = KeyDown(VirtualKey.Shift), alt = KeyDown(VirtualKey.Menu), editing = IsEditing(focused);
         bool inPane = active.ContainsFocus();
+        // ListViewItem can consume Enter before the bubbling KeyDown handler.
+        // Handle it here, in PreviewKeyDown, using the double-click open path.
+        if (e.Key == VirtualKey.Enter && !control && !shift && !alt && !editing &&
+            (CanOpenListingWithEnter(false) || e.KeyStatus.WasKeyDown && enterOpenInProgress > 0 && inPane))
+        {
+            e.Handled = true;
+            if (!e.KeyStatus.WasKeyDown)
+            {
+                enterOpenInProgress++;
+                try { await active.OpenAsync(); }
+                finally { enterOpenInProgress--; }
+            }
+            return;
+        }
         var command = ListingCommand(e.Key, control, shift);
         if (command != null) { e.Handled = true; if (!e.KeyStatus.WasKeyDown) { if (command == "selectAll") active.SelectAllFiles(); else await CommandAsync(command); } return; }
         if (control && shift && e.Key == VirtualKey.T) { e.Handled = true; if (!e.KeyStatus.WasKeyDown) await active.RestoreClosedTabAsync(); }

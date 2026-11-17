@@ -8,21 +8,21 @@ public sealed record OperationResult(string Path, string Result, string? Destina
     public bool Succeeded => Result is "成功" or "成功（完全削除）";
 }
 
-// Shell owns collision prompts and the cancellable progress window. Never suppress
-// copy/move confirmations. Recycle-only mode rejects deletion without recycle
+// Shell owns the cancellable progress window and any late collision prompts.
+// Only an explicit file replacement may overwrite. Recycle-only mode rejects deletion without recycle
 // flags; permanent deletion requires an explicitly approved deletion plan.
 public sealed class FileOperationService
 {
     // Dedicated fixture checks only: errors are returned without opening a modal
-    // error window. Collision/overwrite confirmation is never suppressed.
+    // error window. Unreviewed collisions still use Shell confirmation.
     internal bool SuppressErrorDialogsForChecks { get; init; }
-    public Task<List<OperationResult>> ExecuteAsync(FileAction action, string[] sources, string? destination, nint owner, CancellationToken token, IProgress<string>? progress = null)
-        => ExecuteBatchAsync(sources.Select(source => (Action: action, Source: source, Destination: destination)).ToArray(), false, owner, token, progress);
+    public Task<List<OperationResult>> ExecuteAsync(FileAction action, string[] sources, string? destination, nint owner, CancellationToken token, IProgress<string>? progress = null, Func<FileCollision, CancellationToken, Task<CollisionResolution>>? resolveCollision = null)
+        => ExecuteBatchAsync(sources.Select(source => (Action: action, Source: source, Destination: destination)).ToArray(), false, owner, token, progress, resolveCollision);
 
     public Task<List<OperationResult>> ExecuteDeletionAsync(DeletionPlan plan, bool permanentDeletionConfirmed, nint owner, CancellationToken token, IProgress<string>? progress = null)
         => ExecuteBatchAsync(plan.Items.Select(item => (Action: item.Permanent ? FileAction.DeletePermanently : FileAction.Recycle, Source: item.Path, Destination: (string?)null)).ToArray(), permanentDeletionConfirmed, owner, token, progress);
 
-    private Task<List<OperationResult>> ExecuteBatchAsync((FileAction Action, string Source, string? Destination)[] batch, bool permanentDeletionConfirmed, nint owner, CancellationToken token, IProgress<string>? progress)
+    private Task<List<OperationResult>> ExecuteBatchAsync((FileAction Action, string Source, string? Destination)[] batch, bool permanentDeletionConfirmed, nint owner, CancellationToken token, IProgress<string>? progress, Func<FileCollision, CancellationToken, Task<CollisionResolution>>? resolveCollision = null)
     {
         if (!permanentDeletionConfirmed && batch.Any(x => x.Action == FileAction.DeletePermanently))
             return Task.FromResult(batch.Select(x => new OperationResult(x.Source, "未実行: 完全削除が確認されていません")).ToList());
@@ -30,6 +30,7 @@ public sealed class FileOperationService
         var worker = new Thread(() =>
         {
             var results = new List<OperationResult>();
+            CollisionChoice? remainingChoice = null;
             try
             {
                 foreach (var (action, source, destination) in batch)
@@ -39,13 +40,35 @@ public sealed class FileOperationService
                     {
                         var full = Path.GetFullPath(source);
                         if (!File.Exists(full) && !Directory.Exists(full)) throw new IOException("存在しないかアクセスできません。");
+                        string? transferName = null;
+                        bool keepBoth = false, replaceFile = false;
                         if (action is FileAction.Copy or FileAction.Move)
                         {
                             var folder = Path.GetFullPath(destination!);
                             if (!Directory.Exists(folder)) throw new IOException("転送先フォルダにアクセスできません。");
                             if (Directory.Exists(full) && (string.Equals(Path.TrimEndingDirectorySeparator(folder), Path.TrimEndingDirectorySeparator(full), StringComparison.OrdinalIgnoreCase) || folder.StartsWith(Path.TrimEndingDirectorySeparator(full) + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)))
                                 throw new IOException("フォルダ自身やその中には転送できません。");
+                            bool sameFolder = CollisionNames.SameFolder(full, folder);
+                            if (action == FileAction.Move && sameFolder) { results.Add(new(full, "未実行（同じフォルダへの移動）")); continue; }
+                            var existing = Path.Combine(folder, Path.GetFileName(Path.TrimEndingDirectorySeparator(full)));
+                            bool sourceDirectory = Directory.Exists(full), destinationDirectory = Directory.Exists(existing);
+                            if (action == FileAction.Copy && sameFolder) keepBoth = true;
+                            else if ((File.Exists(existing) || destinationDirectory) && resolveCollision != null)
+                            {
+                                var resolution = remainingChoice is { } remembered ? new CollisionResolution(remembered) :
+                                    resolveCollision(new(full, existing, sourceDirectory, destinationDirectory), token).GetAwaiter().GetResult();
+                                if (token.IsCancellationRequested || resolution.Choice == CollisionChoice.Cancel)
+                                { results.Add(new(full, "中断（同名項目の確認でキャンセル）")); token = new CancellationToken(true); continue; }
+                                if (resolution.ApplyToAll) remainingChoice = resolution.Choice;
+                                if (resolution.Choice == CollisionChoice.Skip) { results.Add(new(full, "スキップ")); continue; }
+                                keepBoth = resolution.Choice == CollisionChoice.KeepBoth;
+                                // Folder replacement is a merge: Shell must still
+                                // ask about nested conflicts rather than approve all children.
+                                replaceFile = resolution.Choice == CollisionChoice.Replace && !sourceDirectory && !destinationDirectory;
+                            }
+                            if (keepBoth) transferName = CollisionNames.Available(folder, full, sourceDirectory, token);
                         }
+                        if (token.IsCancellationRequested) { results.Add(new(full, "未実行（中断）")); continue; }
                         if (action == FileAction.Recycle && (full.StartsWith(@"\\") || new DriveInfo(Path.GetPathRoot(full)!).DriveType != DriveType.Fixed))
                             throw new IOException("共有・リムーバブルドライブからのごみ箱削除は対応していません。");
                         IShellOperation? operation = null; nint item = 0, target = 0; uint cookie = 0;
@@ -57,14 +80,16 @@ public sealed class FileOperationService
                             // omits recycling. Its application dialog is the confirmation.
                             bool permanent = action == FileAction.DeletePermanently;
                             uint flags = permanent ? 0x0010u : 0x40u | 0x4000u | 0x00080000u;
+                            if (keepBoth) flags |= 0x0008u | 0x00200000u; // RENAMEONCOLLISION protects against a naming race.
+                            if (replaceFile) flags |= 0x0010u; // This exact file collision was explicitly approved.
                             operation.SetOperationFlags(flags | (SuppressErrorDialogsForChecks ? 0x0400u | 0x0004u : 0));
                             var sink = new OperationSink(results, token, progress, permanent); operation.Advise(sink, out cookie);
                             item = ShellInterop.Item(full);
                             if (action is FileAction.Copy or FileAction.Move) target = ShellInterop.Item(Path.GetFullPath(destination!));
                             switch (action)
                             {
-                                case FileAction.Copy: operation.CopyItem(item, target, null, 0); break;
-                                case FileAction.Move: operation.MoveItem(item, target, null, 0); break;
+                                case FileAction.Copy: operation.CopyItem(item, target, transferName, 0); break;
+                                case FileAction.Move: operation.MoveItem(item, target, transferName, 0); break;
                                 case FileAction.Rename: operation.RenameItem(item, Path.GetFileName(destination!), 0); break;
                                 case FileAction.Recycle: operation.DeleteItem(item, 0); break;
                                 case FileAction.DeletePermanently: operation.DeleteItem(item, 0); break;
@@ -81,6 +106,7 @@ public sealed class FileOperationService
                             if (operation != null) { if (cookie != 0) operation.Unadvise(cookie); Marshal.FinalReleaseComObject(operation); }
                             if (item != 0) Marshal.Release(item); if (target != 0) Marshal.Release(target);
                         }                    }
+                    catch (OperationCanceledException) { results.Add(new(source, "中断")); token = new CancellationToken(true); }
                     catch (Exception ex) { results.Add(new(source, "失敗: " + ex.Message)); }
                 }
                 completion.SetResult(results);

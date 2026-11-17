@@ -1,5 +1,30 @@
 # 試用版の公開確認
 
+## v0.1.4（2026-11-18）
+
+- `dotnet run --project tests/FilerApp.Checks -c Release --no-restore`: 同名衝突・同一フォルダの複製・実Shell操作を含む 182 件成功。
+- `dotnet build src/FilerApp/FilerApp.csproj -c Debug -p:Platform=x64 --no-restore -o artifacts/check-debug-v0.1.4`: 成功、警告 0・エラー 0。起動中のアプリとは別フォルダで検証。
+- 上記ビルドを `-ExecutablePath` に指定し、`CheckCopyDrop.ps1` 15 件、`CheckEnter.ps1` 10 件、`CheckInput.ps1` 7 件、`CheckResponsiveness.ps1` 9 件、`CheckPaneFocus.ps1` 44 件が成功。
+- `scripts/Publish.ps1`: Release の自己完結ポータブル ZIP と SHA256 を生成。
+- `scripts/CheckPortable.ps1 -ZipPath ./artifacts/NestFiler-win-x64-v0.1.4.zip`: 4 項目成功。ZIP 展開後の起動応答、二重起動防止、設定保存、再起動、アプリのエラーログなしを確認。
+- 配布 exe の製品名 `Nest Filer` とファイルバージョン `0.1.4.0` を確認。
+
+ZIP の SHA256:
+
+```text
+03ffc89b79899bfb8d63631cb659086bde2e248d3d27569a6ee570085e61ef1b
+```
+
+画面検証の記録:
+
+- `artifacts/copy-drop-check-ac8ff05b6bb34f6892d4e3b7d0664f97/copy-drop-check.txt`
+- `artifacts/enter-check-4145577f71af44cd806ca237b656cc15/enter-check.txt`
+- `artifacts/input-check-aa2dbdcf33de4f12901560d4314ef2e9/input-check.txt`
+- `artifacts/responsiveness-check-ed8d3b214b514dc9b8ac3acc07af98d8/responsiveness-check.txt`
+- `artifacts/focus-check-13b1246869334b588aa7e7125daba87d/focus-check.txt`
+
+専用データ・隔離プロファイルで確認。ドロップとEnterは実WinUIの保存先・フォーカス判定とアプリ処理を検証し、実際のマウス／キー入力からイベント発火までの全経路や長押しの実入力を代替しません。タイトルバーの外観・実ハイコントラスト切替、クリーンPC、実SMB共有の同名衝突・切断は未確認です。今回のタブ位置復元確認は成功しましたが、過去の断続的なずれの解消を意味しません。
+
 ## v0.1.3（2026-11-17）
 
 - `dotnet run --project tests/FilerApp.Checks -c Release --no-restore`: 166 件成功。

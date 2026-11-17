@@ -23,7 +23,7 @@
   <Grid RowSpacing="3"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
    <Border x:Name="ActivePaneSurface" Grid.RowSpan="7" Margin="-5" CornerRadius="4" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" IsHitTestVisible="False" Visibility="Collapsed"/>
    <TabView x:Name="Tabs" TabWidthMode="SizeToContent" SelectionChanged="TabChanged" AddTabButtonClick="TabAdd" TabCloseRequested="TabClose">
-    <TabView.TabItemTemplate><DataTemplate x:DataType="core:TabViewModel"><TabViewItem Header="{x:Bind Title, Mode=OneWay}" Tag="{x:Bind}" IsClosable="True" /></DataTemplate></TabView.TabItemTemplate>
+    <TabView.TabItemTemplate><DataTemplate x:DataType="core:TabViewModel"><TabViewItem Header="{x:Bind Title, Mode=OneWay}" Tag="{x:Bind}" IsClosable="True" FontSize="13" FontWeight="SemiBold" /></DataTemplate></TabView.TabItemTemplate>
    </TabView>
    <Grid Grid.Row="1" ColumnSpacing="2"><Grid.ColumnDefinitions><ColumnDefinition Width="22"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
     <TextBlock x:Name="PaneLabel" Text="A" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" HorizontalAlignment="Center"/>
@@ -42,10 +42,10 @@
     <Button x:Name="StopSearchButton" Grid.Column="9" Visibility="Collapsed" Style="{StaticResource NavigationButton}" Click="StopPaneSearch" AutomationProperties.Name="検索を中断" ToolTipService.ToolTip="検索を中断"><FontIcon Glyph="&#xE711;" FontSize="12"/></Button>
     <Button x:Name="SearchOptionsButton" Grid.Column="10" Visibility="Collapsed" Style="{StaticResource NavigationButton}" Click="ShowSearchOptions" AutomationProperties.Name="検索条件" ToolTipService.ToolTip="検索条件（右クリックからも変更できます）"><FontIcon Glyph="&#xE712;" FontSize="14"/></Button>
    </Grid>
-   <Grid Grid.Row="2" MinHeight="28">
+   <Border Grid.Row="2" BorderThickness="1" CornerRadius="3" BorderBrush="{ThemeResource NavigationBorderBrush}" Background="{ThemeResource BreadcrumbSurfaceBrush}"><Grid MinHeight="26">
     <Grid x:Name="PathBar" Background="Transparent" PointerPressed="PathBarPressed"><Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*" MinWidth="24"/></Grid.ColumnDefinitions><ScrollViewer x:Name="BreadcrumbScroller" HorizontalScrollBarVisibility="Hidden" HorizontalScrollMode="Enabled" VerticalScrollBarVisibility="Disabled"><StackPanel x:Name="BreadcrumbItems" Orientation="Horizontal" Spacing="0"/></ScrollViewer></Grid>
-    <TextBox x:Name="Address" Visibility="Collapsed" MinHeight="28" Height="28" Padding="6,2" FontSize="13" KeyDown="AddressKey" LostFocus="AddressLostFocus" AutomationProperties.Name="フォルダパス"/>
-   </Grid>
+    <TextBox x:Name="Address" Visibility="Collapsed" MinHeight="26" Height="26" Padding="6,1" FontSize="13" BorderThickness="0" Background="{ThemeResource BreadcrumbSurfaceBrush}" Foreground="{ThemeResource NavigationTextBrush}" KeyDown="AddressKey" LostFocus="AddressLostFocus" AutomationProperties.Name="フォルダパス"/>
+   </Grid></Border>
    <Grid x:Name="FilterBar" Grid.Row="3" Visibility="Collapsed"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><TextBox x:Name="ListFilter" Height="28" MinHeight="28" Padding="6,2" FontSize="12" PlaceholderText="現在の一覧を絞り込み（*.csv など）" AutomationProperties.Name="一覧の絞り込み" TextChanged="FilterChanged" KeyDown="FilterKey"/><Button Grid.Column="1" Style="{StaticResource NavigationButton}" Click="ClearFilter" AutomationProperties.Name="絞り込みを解除"><FontIcon Glyph="&#xE711;" FontSize="12"/></Button></Grid>
    <Grid x:Name="ColumnHeaders" Grid.Row="4" Height="24" Margin="6,0,0,0" HorizontalAlignment="Left"><Grid x:Name="ColumnHeaderGrid" Height="24" HorizontalAlignment="Left"><Grid.RenderTransform><TranslateTransform x:Name="HeaderTranslation"/></Grid.RenderTransform></Grid></Grid>
    <Grid x:Name="FileArea" Grid.Row="5" Background="Transparent">

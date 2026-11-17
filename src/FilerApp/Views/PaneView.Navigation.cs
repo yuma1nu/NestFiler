@@ -34,13 +34,16 @@ public sealed partial class PaneView
         Address.Text = path;
         try
         {
-            foreach (var crumb in PathBreadcrumbs.Build(path))
+            var crumbs = PathBreadcrumbs.Build(path);
+            for (int i = 0; i < crumbs.Count; i++)
             {
-                var button = new Button { Content = crumb.Name, Style = (Style)Application.Current.Resources["FlatRowButton"], HorizontalAlignment = HorizontalAlignment.Left, MinWidth = 0, MaxWidth = 220 };
+                var crumb = crumbs[i]; bool current = i == crumbs.Count - 1;
+                if (i > 0) BreadcrumbItems.Children.Add(new FontIcon { Glyph = "\uE76C", FontSize = 10, Width = 16, Foreground = (Brush)Application.Current.Resources["BreadcrumbSeparatorBrush"], VerticalAlignment = VerticalAlignment.Center, IsHitTestVisible = false });
+                var button = new Button { Content = crumb.Name, Style = (Style)Application.Current.Resources[current ? "CurrentBreadcrumbButton" : "BreadcrumbButton"], HorizontalAlignment = HorizontalAlignment.Left, MinWidth = 0, MaxWidth = 220 };
+                Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(button, crumb.Name + (current ? "（現在のフォルダ）" : ""));
                 ToolTipService.SetToolTip(button, crumb.Path);
                 button.Click += async (_, _) => await NavigateAsync(crumb.Path);
                 BreadcrumbItems.Children.Add(button);
-                BreadcrumbItems.Children.Add(new FontIcon { Glyph = "\uE76C", FontSize = 9, Width = 14, VerticalAlignment = VerticalAlignment.Center, IsHitTestVisible = false });
             }
         }
         catch (Exception ex) when (ex is ArgumentException or NotSupportedException or System.IO.IOException)

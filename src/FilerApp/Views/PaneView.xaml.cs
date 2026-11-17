@@ -120,7 +120,15 @@ public sealed partial class PaneView : UserControl
         }
     }    private void FileSelection(object sender, SelectionChangedEventArgs e) { if (!updatingMarqueeSelection) QueueSelectionUpdate(); }
     private async void OpenSelected(object sender, DoubleTappedRoutedEventArgs e) => await OpenAsync();
-    private async void FileKey(object sender, KeyRoutedEventArgs e) { if (e.Key == VirtualKey.Enter) { e.Handled = true; await OpenAsync(); } }
+    private async void FileKey(object sender, KeyRoutedEventArgs e)
+    {
+        if (e.Handled || e.Key != VirtualKey.Enter) return;
+        // Fallback for a standalone PaneView; MainWindow normally intercepts
+        // unmodified Enter before the native item handles it.
+        var modifiers = new[] { VirtualKey.Control, VirtualKey.Shift, VirtualKey.Menu };
+        if (modifiers.Any(key => Microsoft.UI.Input.InputKeyboardSource.GetKeyStateForCurrentThread(key).HasFlag(Windows.UI.Core.CoreVirtualKeyStates.Down))) return;
+        e.Handled = true; if (!e.KeyStatus.WasKeyDown) await OpenAsync();
+    }
     private void RecordFolderVisit() { if (Current is { IsSearch: false } tab && !tab.Status.StartsWith("開けません")) Visited?.Invoke(tab.Path, true); }
     public async Task OpenAsync()
     {

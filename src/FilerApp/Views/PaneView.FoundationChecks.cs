@@ -57,7 +57,8 @@ public sealed partial class PaneView
         Check(Current!.Path == folder && SelectedPaths.SequenceEqual(new[] { child }), "parent navigation selects the folder just left");
         Files.ScrollIntoView(Current.Entries.Single(x => x.Path == child), ScrollIntoViewAlignment.Leading); Files.UpdateLayout();
         var childRow = (ListViewItem)Files.ContainerFromItem(Current.Entries.Single(x => x.Path == child));
-        Check(DropFolder(childRow) == child && DropFolder(Files) == folder, "folder row and background resolve to different drop destinations");
+        var childPoint = childRow.TransformToVisual(Files).TransformPoint(new Point(Math.Max(1, childRow.ActualWidth - 2), childRow.ActualHeight / 2));
+        Check(DropFolder(childPoint) == child && DropFolder(new Point(-1, -1)) == folder, "folder row and background resolve to different drop destinations");
         SetCutPaths([child]); Check(Math.Abs(childRow.Opacity - 0.45) < 0.01, "cut paths dim realized rows without changing selection");
         SetCutPaths([]); Check(childRow.Opacity == 1, "clearing cut state restores row opacity");
         FocusFilter(); ListFilter.Text = "run2*.txt";

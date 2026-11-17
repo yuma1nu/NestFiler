@@ -21,7 +21,7 @@ public sealed partial class MainWindow
         try
         {
             if (command == "cancel") { operationCancellation?.Cancel(); return; }
-            if (command == "results") { await new ContentDialog { XamlRoot = Root.XamlRoot, Title = "ファイル操作結果", Content = new ScrollViewer { MaxHeight = 450, Content = new TextBlock { Text = string.Join("\n\n", operationResults.Select(x => x.Path + "\n" + x.Result)), TextWrapping = TextWrapping.Wrap, IsTextSelectionEnabled = true } }, CloseButtonText = "閉じる" }.ShowAsync(); return; }
+            if (command == "results") { await new ContentDialog { XamlRoot = Root.XamlRoot, Title = "ファイル操作結果", Content = new ScrollViewer { MaxHeight = 450, Content = new TextBlock { Text = string.Join("\n\n", operationResults.Select(x => x.Path + "\n" + x.Result + (x.Destination == null ? "" : "\n→ " + x.Destination))), TextWrapping = TextWrapping.Wrap, IsTextSelectionEnabled = true } }, CloseButtonText = "閉じる" }.ShowAsync(); return; }
             if (operating || deletePromptOpen) { Status.Text = "ファイル操作中、または削除の確認中です。"; return; }
             var pane = active; var paths = pane.SelectedPaths; var folder = pane.Current?.Path;
             if (folder == null) return;
@@ -59,11 +59,11 @@ public sealed partial class MainWindow
     private async Task<List<OperationResult>> RunOperationAsync(FileAction action, string[] paths, string? destination, DeletionPlan? deletionPlan = null)
     {
         if (operating || paths.Length == 0 || (destination == null && action != FileAction.Recycle)) return [];
-        operating = true; operationCancellation = new(); Status.Text = "ファイル操作中 — 衝突の選択・進捗・キャンセルはWindows Shell画面で操作してください。";
+        operating = true; operationCancellation = new(); Status.Text = "ファイル操作中 — 同名項目は確認画面で選択できます。進捗・中断はWindows Shell画面で操作してください。";
         try
         {
             var service = new FileOperationService(); var owner = WinRT.Interop.WindowNative.GetWindowHandle(this); var progress = new Progress<string>(message => Status.Text = message);
-            operationResults = deletionPlan == null ? await service.ExecuteAsync(action, paths, destination, owner, operationCancellation.Token, progress) :
+            operationResults = deletionPlan == null ? await service.ExecuteAsync(action, paths, destination, owner, operationCancellation.Token, progress, ResolveCollisionAsync) :
                 await service.ExecuteDeletionAsync(deletionPlan, true, owner, operationCancellation.Token, progress);
             await Task.WhenAll(LeftPane.RefreshAfterOperationAsync(), RightPane.RefreshAfterOperationAsync());
             Status.Text = $"操作終了: 成功 {operationResults.Count(x => x.Succeeded)} 件 / その他 {operationResults.Count(x => !x.Succeeded)} 件。右クリック → ファイル操作の結果で明細を確認できます。";
