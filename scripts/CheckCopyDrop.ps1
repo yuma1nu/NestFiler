@@ -14,5 +14,5 @@ $report = Join-Path $profile 'copy-drop-check.txt'
 if (!(Test-Path -LiteralPath $report)) { throw "No copy/drop report: $profile" }
 $lines = @(Get-Content -LiteralPath $report)
 $lines | Write-Output
-if (($lines | Where-Object { $_ -like 'FAIL*' }) -or ($lines | Where-Object { $_ -like 'PASS*' }).Count -ne 15) { throw "Copy/drop checks failed: $report" }
+if (($lines | Where-Object { $_ -like 'FAIL*' }) -or ($lines | Where-Object { $_ -like 'PASS*' }).Count -ne 19) { throw "Copy/drop checks failed: $report" }
 Write-Output "Report: $report"

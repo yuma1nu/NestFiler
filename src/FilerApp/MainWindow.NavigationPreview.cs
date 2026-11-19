@@ -25,6 +25,7 @@ public sealed partial class MainWindow
             await RightPane.NavigateAsync(reports); await RightPane.NavigateAsync(cad, true);
             state.FavoriteNodes = [new() { Name = "開発プロジェクト", Children = [new() { Name = "実験データ", Path = data }, new() { Name = "CAD", Path = cad }, new() { Name = "報告書", Path = reports }] }];
             RenderFavorites(); SetActive(LeftPane);
+            await LeftPane.DebugCheckNavigationButtonsAsync(report);
             foreach (var theme in new[] { ElementTheme.Dark, ElementTheme.Light })
             {
                 Root.RequestedTheme = theme; await Task.Delay(300); Root.UpdateLayout();

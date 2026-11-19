@@ -1,5 +1,33 @@
 # 試用版の公開確認
 
+## v0.1.5（2026-11-19）
+
+- `dotnet run --project tests/FilerApp.Checks -c Release --no-restore`: 182 件成功。
+- `dotnet build src/FilerApp/FilerApp.csproj -c Debug -p:Platform=x64 --no-restore -o artifacts/check-debug-v0.1.5`: 成功、警告 0・エラー 0。起動中のアプリとは別フォルダで検証。
+- 上記ビルドを `-ExecutablePath` に指定し、`CheckCopyDrop.ps1` 19 件、`CheckNavigation.ps1` 4 件、`CheckEnter.ps1` 10 件、`CheckInput.ps1` 7 件、`CheckResponsiveness.ps1` 9 件が成功（合計 49 件）。
+- `CheckNavigation.ps1` のライト／ダークのXAML描画画像を確認。タブの閉じるボタン、検索ボタン、ネイティブタイトルバーの配色値も検証。画像はアプリ内容だけで、ネイティブタイトルバーの画面キャプチャではありません。
+- **既存回帰の `CheckPaneFocus.ps1` は 33 件成功後、タブ表示位置復元で 1 件失敗。** アンカーのY位置が期待 -20 DIP に対して 28 DIP、保存オフセット 49048 に対して 49000（48 DIPの差）。以降の項目は未実行です。[名称変更時にも検出した既知の断続的な問題](NAMING.md)として記録し、検証を通すための再実行・基準変更は行っていません。
+- `scripts/Publish.ps1` でReleaseの自己完結ポータブルZIPを生成。今回検出した制約をリリースノートに追記し、同梱ノート・ZIP・SHA256を更新。
+- `scripts/CheckPortable.ps1 -ZipPath ./artifacts/NestFiler-win-x64-v0.1.5.zip`: 最終ZIPで4項目成功。展開後の起動応答、二重起動防止、設定保存、再起動、アプリのエラーログなしを確認。
+- 配布 exe の製品名 `Nest Filer` とファイルバージョン `0.1.5.0` を確認。
+
+最終ZIPのSHA256:
+
+```text
+bbc04129787c51bd4f54d407d73682170b1dc262f64144f203d45ef78384811d
+```
+
+画面検証の記録:
+
+- `artifacts/copy-drop-check-45343540850e49648d120bf3db5b1c97/copy-drop-check.txt`
+- `artifacts/navigation-pill-8cbee27d78cf493887f873e968e0d9b7/navigation-preview.txt`
+- `artifacts/enter-check-5dea11ee1a07489aa23bd6095f87e8fe/enter-check.txt`
+- `artifacts/input-check-9fb3316c65aa408e885c5ec60a68e5d0/input-check.txt`
+- `artifacts/responsiveness-check-30d5983e0cba42118b984cf96af9f400/responsiveness-check.txt`
+- `artifacts/focus-check-923bf49e997948c086ca4e6cff0264cf/focus-check.txt`（失敗を含む）
+
+専用データ・隔離プロファイルで確認。OSからの実ドラッグ入力、Explorerとの往復ドラッグ、実ハイコントラスト切替、実SMB共有の異常系、認証済みOffice文書、クリーンPC等の未検証事項は継続します。
+
 ## v0.1.4（2026-11-18）
 
 - `dotnet run --project tests/FilerApp.Checks -c Release --no-restore`: 同名衝突・同一フォルダの複製・実Shell操作を含む 182 件成功。

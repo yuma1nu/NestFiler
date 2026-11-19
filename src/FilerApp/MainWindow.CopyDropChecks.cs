@@ -14,11 +14,13 @@ public sealed partial class MainWindow
         var target = Directory.CreateDirectory(Path.Combine(root, "TARGET")).FullName;
         await File.WriteAllTextAsync(Path.Combine(root, "move-me.txt"), "move fixture");
         await File.WriteAllTextAsync(Path.Combine(root, "copy-me.txt"), "copy fixture");
+        var movingFolder = Directory.CreateDirectory(Path.Combine(root, "move-folder")).FullName;
+        await File.WriteAllTextAsync(Path.Combine(movingFolder, "nested.txt"), "nested fixture");
         await LeftPane.NavigateAsync(root); await RightPane.NavigateAsync(target); SetActive(LeftPane); LeftPane.FocusFiles();
         if (Environment.GetEnvironmentVariable("FILERAPP_COPY_DROP_HOLD") == "1") { Status.Text = "隔離したフォルダへのドロップ確認用"; return; }
         try
         {
-            await LeftPane.DebugCheckFolderDropsAsync(root, results);
+            await LeftPane.DebugCheckFolderDropsAsync(root, results, RightPane);
             var sourceFolder = Directory.CreateDirectory(Path.Combine(AppLog.DataDirectory, "collision-source")).FullName;
             var destination = Directory.CreateDirectory(Path.Combine(AppLog.DataDirectory, "collision-target")).FullName;
             var source = Path.Combine(sourceFolder, "report.txt"); var existing = Path.Combine(destination, "report.txt");

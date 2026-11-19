@@ -15,7 +15,15 @@ public sealed class FileListView : ListView
     internal Func<PointerRoutedEventArgs, bool>? MoveMarquee;
     internal Func<PointerRoutedEventArgs, bool>? ReleaseMarquee;
     internal Action<ListViewItem, PointerRoutedEventArgs>? ItemPressed;
+    internal Func<PointerRoutedEventArgs, bool>? BeginFileDrag;
     private bool blankPress;
+    private bool suppressDragHover;
+    internal void SetDragFeedback(bool active)
+    {
+        if (suppressDragHover == active) return;
+        suppressDragHover = active;
+        if (ItemsPanelRoot != null) foreach (var row in ItemsPanelRoot.Children.OfType<FileListItem>()) row.ResetDragHover();
+    }
     private readonly AccessibilitySettings accessibility = new();
     private bool highContrast;
     internal void SuppressBackgroundTap() => blankPress = true;
@@ -40,7 +48,7 @@ public sealed class FileListView : ListView
         if (!e.Handled) blankPress = BeginMarquee?.Invoke(e) == true;
         if (!blankPress) base.OnPointerPressed(e);
     }
-    protected override void OnPointerMoved(PointerRoutedEventArgs e) { if (MoveMarquee?.Invoke(e) == true) return; base.OnPointerMoved(e); }
+    protected override void OnPointerMoved(PointerRoutedEventArgs e) { if (suppressDragHover || MoveMarquee?.Invoke(e) == true || BeginFileDrag?.Invoke(e) == true) return; base.OnPointerMoved(e); }
     protected override void OnPointerReleased(PointerRoutedEventArgs e) { if (ReleaseMarquee?.Invoke(e) == true) return; base.OnPointerReleased(e); }
     protected override void OnTapped(TappedRoutedEventArgs e) { if (blankPress) { e.Handled = true; return; } base.OnTapped(e); }
     protected override void OnDoubleTapped(DoubleTappedRoutedEventArgs e) { if (blankPress) { e.Handled = true; return; } base.OnDoubleTapped(e); }
@@ -52,7 +60,7 @@ public sealed class FileListView : ListView
         {
             this.owner = owner;
         }
-        protected override void OnApplyTemplate() { base.OnApplyTemplate(); ApplySelectionIndicator(); }
+        protected override void OnApplyTemplate() { base.OnApplyTemplate(); ApplySelectionIndicator(); if (owner.suppressDragHover) ResetDragHover(); }
         internal void ApplySelectionIndicator()
         {
             if (GetTemplateChild("Root") is not ListViewItemPresenter presenter) return;
@@ -62,14 +70,18 @@ public sealed class FileListView : ListView
             var brush = owner.highContrast ? (Brush)Application.Current.Resources["TextFillColorPrimaryBrush"] : new SolidColorBrush(Microsoft.UI.Colors.Transparent);
             presenter.SelectionIndicatorBrush = presenter.SelectionIndicatorPointerOverBrush = presenter.SelectionIndicatorPressedBrush = presenter.SelectionIndicatorDisabledBrush = brush;
         }
+        internal void ResetDragHover() => VisualStateManager.GoToState(this, IsSelected ? "Selected" : "Normal", false);
         protected override void OnPointerPressed(PointerRoutedEventArgs e)
         {
             owner.ItemPressed?.Invoke(this, e); blankPress = owner.BeginMarquee?.Invoke(e) == true; owner.blankPress = blankPress;
             if (!blankPress) base.OnPointerPressed(e);
         }
-        protected override void OnPointerMoved(PointerRoutedEventArgs e)
-        { base.OnPointerMoved(e); }
-        protected override void OnTapped(TappedRoutedEventArgs e) { if (blankPress) { e.Handled = true; return; } base.OnTapped(e); }
-        protected override void OnDoubleTapped(DoubleTappedRoutedEventArgs e) { if (blankPress) { e.Handled = true; return; } base.OnDoubleTapped(e); }
+        protected override void OnPointerEntered(PointerRoutedEventArgs e) { if (!owner.suppressDragHover) base.OnPointerEntered(e); }
+        protected override void OnPointerExited(PointerRoutedEventArgs e) { if (!owner.suppressDragHover) base.OnPointerExited(e); }
+        protected override void OnPointerMoved(PointerRoutedEventArgs e) { if (!owner.suppressDragHover && owner.BeginFileDrag?.Invoke(e) != true) base.OnPointerMoved(e); }
+        protected override void OnPointerCanceled(PointerRoutedEventArgs e) { base.OnPointerCanceled(e); if (owner.suppressDragHover) ResetDragHover(); }
+        protected override void OnPointerCaptureLost(PointerRoutedEventArgs e) { base.OnPointerCaptureLost(e); if (owner.suppressDragHover) ResetDragHover(); }
+        protected override void OnTapped(TappedRoutedEventArgs e) { if (blankPress || owner.blankPress) { e.Handled = true; return; } base.OnTapped(e); }
+        protected override void OnDoubleTapped(DoubleTappedRoutedEventArgs e) { if (blankPress || owner.blankPress) { e.Handled = true; return; } base.OnDoubleTapped(e); }
     }
 }

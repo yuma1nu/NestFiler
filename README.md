@@ -4,9 +4,9 @@ Windows 用の 2 ペインファイラー。左右独立のタブ、お気に入
 
 ## ダウンロード・起動
 
-[v0.1.4 試用版をダウンロード](https://github.com/yuma1nu/NestFiler/releases/tag/v0.1.4)
+[v0.1.5 試用版をダウンロード](https://github.com/yuma1nu/NestFiler/releases/tag/v0.1.5)
 
-1. リリースの Assets から `NestFiler-win-x64-v0.1.4.zip` をダウンロード。
+1. リリースの Assets から `NestFiler-win-x64-v0.1.5.zip` をダウンロード。
 2. ZIP をローカルの書き込み可能なフォルダに展開。
 3. フォルダ内の `NestFiler.exe` を起動。exe だけを取り出さず、同梱ファイルを維持してください。
 
